@@ -2,14 +2,12 @@
 
 ## Usage
 
-The visitor class: `Checker`.  
-For this moment only 1 support: PostgreSQL:
+The visitor class: `Checker`
 ```java
-Checker checker = new PostgresChecker("jdbc:postgresql://HOST:PORT/DATABASE?user=username&password=PASSWORD&currentSchema=SCHEMA");
+Checker checker = new JdbcMetadataChecker("jdbc:postgresql://HOST:PORT/DATABASE?user=USERNAME&password=PASSWORD&currentSchema=SCHEMA");
 ```
-But you can implement your own `Checker`!
 
-The `@Entity` classes: `List<Class<?>>`.
+The `@Entity` classes: `List<Class<?>>`.  
 You can use the util class:
 ```java
 List<Class<?>> entities = new EntityScanner("foo.bar.pack").get();
