@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.model;
+package fr.pinguet62.jpavalidator.model.ok;
 
 import java.util.List;
 

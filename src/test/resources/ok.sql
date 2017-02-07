@@ -1,6 +1,6 @@
 create table ADDRESS (
-	ID_A int primary key -- Id
-	--EMPLOYEE_ID int references EMPLOYEE(ID_E) -- OneToOne
+	ID_A int primary key, -- Id
+	EMPLOYEE_ID int /*references EMPLOYEE(ID_E)*/ -- OneToOne
 );
 
 create table EMPLOYEE (
@@ -10,7 +10,7 @@ create table EMPLOYEE (
 	-- ManyToMany: see PROJECT
 );
 
-alter table ADDRESS add column EMPLOYEE_ID int references EMPLOYEE(ID_E); -- OneToOne
+alter table ADDRESS add foreign key (EMPLOYEE_ID) references EMPLOYEE (ID_E); -- OneToOne
 
 create table CAR (
 	ID_C int primary key, -- Id
