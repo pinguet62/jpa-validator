@@ -14,24 +14,16 @@ import javax.persistence.Table;
  * Return {@code true} if is valid, {@code false} otherwise.<br>
  * Throw {@link NotImplementedException} if not implemented.
  */
-public abstract class Checker {
-
-    public static class NotImplementedException extends RuntimeException {
-        private static final long serialVersionUID = 1;
-    }
+public interface Checker {
 
     /** @param length {@link Column#length()} */
-    public boolean checkCharacter(String tableName, String columnName, int length) {
-        throw new NotImplementedException();
-    }
+    boolean checkCharacter(String tableName, String columnName, int length);
 
     /**
      * @param columnName {@link Column#name()}
      * @param nullable {@link Column#nullable()}
      */
-    public boolean checkColumn(String tableName, String columnName, boolean nullable) {
-        throw new NotImplementedException();
-    }
+    boolean checkColumn(String tableName, String columnName, boolean nullable);
 
     /**
      * @param srcTableName Source {@link Table#name()}
@@ -40,29 +32,21 @@ public abstract class Checker {
      * @see ManyToOne
      * @see OneToOne
      */
-    public boolean checkForeignKey(String tableName, String columnName, String tgtTableName) {
-        throw new NotImplementedException();
-    }
+    boolean checkForeignKey(String tableName, String columnName, String tgtTableName);
 
     /**
      * @see Id
      * @see Generated
      */
-    public boolean checkId(String tableName, String columnName) {
-        throw new NotImplementedException();
-    }
+    boolean checkId(String tableName, String columnName);
 
     /**
      * @param precision {@link Column#precision()}
      * @param scale {@link Column#scale()}
      */
-    public boolean checkNumeric(String tableName, String columnName, int precision, int scale) {
-        throw new NotImplementedException();
-    }
+    boolean checkNumeric(String tableName, String columnName, int precision, int scale);
 
     /** @see Table#name() */
-    public boolean checkTable(String name) {
-        throw new NotImplementedException();
-    }
+    boolean checkTable(String name);
 
 }

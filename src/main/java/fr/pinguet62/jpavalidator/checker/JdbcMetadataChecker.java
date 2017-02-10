@@ -10,24 +10,23 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /** Implementation of {@link Checker} for PostreSQL. */
-public class JdbcMetadataChecker extends Checker {
+public class JdbcMetadataChecker implements Checker {
 
-    static List<Map<String, Object>> resultSetToMap(ResultSet resultSet) throws SQLException {
-        List<Map<String, Object>> rows = new ArrayList<>();
+    static void print(ResultSet resultSet) throws SQLException {
+        System.out.println("==================================================");
+        String sep = " - ";
         ResultSetMetaData md = resultSet.getMetaData();
+        for (int i = 1; i <= md.getColumnCount(); ++i)
+            System.out.print(md.getColumnName(i) + sep);
+        System.out.println();
         while (resultSet.next()) {
-            Map<String, Object> columns = new HashMap<>();
             for (int i = 1; i <= md.getColumnCount(); ++i)
-                columns.put(md.getColumnName(i), resultSet.getObject(i));
-            rows.add(columns);
+                System.out.print(resultSet.getObject(i) + sep);
+            System.out.println();
         }
-        return rows;
+        System.out.println("==================================================");
     }
 
     private final String catalog;
@@ -46,7 +45,7 @@ public class JdbcMetadataChecker extends Checker {
     @Override
     public boolean checkCharacter(String tableName, String columnName, int length) {
         try {
-            ResultSet resultSet = metadata.getColumns(catalog, schema, tableName.toLowerCase(), columnName.toLowerCase());
+            ResultSet resultSet = metadata.getColumns(catalog, schema, tableName.toUpperCase(), columnName.toUpperCase());
             return resultSet.next() && resultSet.getInt("COLUMN_SIZE") == length;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -56,7 +55,7 @@ public class JdbcMetadataChecker extends Checker {
     @Override
     public boolean checkColumn(String tableName, String columnName, boolean nullable) {
         try {
-            ResultSet resultSet = metadata.getColumns(catalog, schema, tableName.toLowerCase(), columnName.toLowerCase());
+            ResultSet resultSet = metadata.getColumns(catalog, schema, tableName.toUpperCase(), columnName.toUpperCase());
             if (!resultSet.next())
                 return false;
             if (resultSet.getInt("NULLABLE") == columnNullableUnknown)
@@ -70,12 +69,26 @@ public class JdbcMetadataChecker extends Checker {
     @Override
     public boolean checkForeignKey(String tableName, String columnName, String tgtTableName) {
         try {
-            ResultSet resultSet = metadata.getImportedKeys(catalog, schema, tableName.toLowerCase());
-            while (resultSet.next())
-                if (resultSet.getString("FKTABLE_NAME").toLowerCase().equals(tableName.toLowerCase())
-                        && resultSet.getString("FKCOLUMN_NAME").toLowerCase().equals(columnName.toLowerCase())
-                        && resultSet.getString("PKTABLE_NAME").toLowerCase().equals(tgtTableName.toLowerCase()))
-                    return true;
+            ResultSet fkResultSet = metadata.getImportedKeys(catalog, schema, tableName.toUpperCase());
+            while (fkResultSet.next())
+                // FK exists
+                if (fkResultSet.getString("FKCOLUMN_NAME").equals(columnName.toUpperCase())
+                        && fkResultSet.getString("PKTABLE_NAME").equals(tgtTableName.toUpperCase())) {
+                    // Target PK column name
+                    ResultSet targetPkResultSet = metadata.getPrimaryKeys(catalog, schema, tgtTableName.toUpperCase());
+                    targetPkResultSet.next();
+                    String targetColumnName = targetPkResultSet.getString("COLUMN_NAME");
+                    // Check type
+                    ResultSet type1 = metadata.getColumns(catalog, schema, tableName.toUpperCase(), columnName.toUpperCase());
+                    ResultSet type2 = metadata.getColumns(catalog, schema, tgtTableName.toUpperCase(), targetColumnName);
+                    return
+                    // exist
+                    (type1.next() && type2.next())
+                            // type
+                            && (type1.getInt("DATA_TYPE") == type2.getInt("DATA_TYPE"))
+                            // constraints
+                            && (type1.getInt("COLUMN_SIZE") == type2.getInt("COLUMN_SIZE"));
+                }
             return false;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -85,9 +98,9 @@ public class JdbcMetadataChecker extends Checker {
     @Override
     public boolean checkId(String tableName, String columnName) {
         try {
-            ResultSet resultSet = metadata.getPrimaryKeys(catalog, schema, tableName.toLowerCase());
+            ResultSet resultSet = metadata.getPrimaryKeys(catalog, schema, tableName.toUpperCase());
             while (resultSet.next())
-                if (resultSet.getString("COLUMN_NAME").toLowerCase().equals(columnName.toLowerCase()))
+                if (resultSet.getString("COLUMN_NAME").equals(columnName.toUpperCase()))
                     return true;
             return false;
         } catch (SQLException e) {
@@ -109,7 +122,7 @@ public class JdbcMetadataChecker extends Checker {
     @Override
     public boolean checkTable(String tableName) {
         try {
-            return metadata.getTables(catalog, schema, tableName.toLowerCase(), null).next();
+            return metadata.getTables(catalog, schema, tableName.toUpperCase(), null).next();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

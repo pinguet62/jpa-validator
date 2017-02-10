@@ -8,18 +8,21 @@ import static org.junit.Assert.fail;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import fr.pinguet62.jpavalidator.checker.Checker;
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.exception.ValidationException;
+import fr.pinguet62.jpavalidator.model.IdTable;
 import fr.pinguet62.jpavalidator.model.column.ColumnLength;
 import fr.pinguet62.jpavalidator.model.column.ColumnNullable;
 import fr.pinguet62.jpavalidator.model.column.ColumnNumeric;
-import fr.pinguet62.jpavalidator.model.ok.OkModel;
+import fr.pinguet62.jpavalidator.model.manytomany.Employee;
+import fr.pinguet62.jpavalidator.model.manytomany.Project;
+import fr.pinguet62.jpavalidator.util.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.Script;
 
+@RunWith(SchemaRunner.class)
 public class FullITTest {
 
     private final Checker checker;
@@ -29,7 +32,7 @@ public class FullITTest {
     }
 
     private void runCheck(List<Class<?>> entitites) throws ValidationException {
-        new Processor(checker).accept(asList(ColumnLength.class));
+        new Processor(checker).accept(entitites);
     }
 
     @Test
@@ -39,7 +42,8 @@ public class FullITTest {
             runCheck(asList(ColumnLength.class));
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors());
+            // print(e);
+            assertEquals(1, e.getErrors().size());
         }
     }
 
@@ -50,7 +54,8 @@ public class FullITTest {
             runCheck(asList(ColumnNullable.class));
             fail();
         } catch (ValidationException e) {
-            assertEquals(2, e.getErrors());
+            // print(e);
+            assertEquals(2, e.getErrors().size());
         }
     }
 
@@ -61,14 +66,59 @@ public class FullITTest {
             runCheck(asList(ColumnNumeric.class));
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors());
+            // print(e);
+            assertEquals(1, e.getErrors().size());
         }
     }
 
     @Test
-    @Ignore
-    public void todo() {
-        runCheck(new EntityScanner(OkModel.class.getPackage().getName()).get());
+    @Script("/id.sql")
+    public void test_id() {
+        try {
+            runCheck(asList(IdTable.class));
+            fail();
+        } catch (ValidationException e) {
+            // print(e);
+            assertEquals(1, e.getErrors().size());
+        }
+    }
+
+    @Test
+    @Script("/manytomany.sql")
+    public void test_manytomany() {
+        try {
+            runCheck(asList(Employee.class, Project.class));
+            // TODO Bad mapping
+        } catch (ValidationException e) {
+            // print(e);
+            fail();
+        }
+    }
+
+    @Test
+    @Script("/manytoone.sql")
+    public void test_manytoone() {
+        try {
+            runCheck(asList(fr.pinguet62.jpavalidator.model.manytoone.Person.class,
+                    fr.pinguet62.jpavalidator.model.manytoone.Car.class));
+            fail();
+        } catch (ValidationException e) {
+            // print(e);
+            assertEquals(2, e.getErrors().size());
+        }
+    }
+
+    @Test
+    @Script("/onetoone.sql")
+    public void test_onetoone() {
+        try {
+            runCheck(asList(fr.pinguet62.jpavalidator.model.onetoone.Person.class,
+                    fr.pinguet62.jpavalidator.model.onetoone.Address.class));
+            // TODO Bad mapping
+        } catch (ValidationException e) {
+            // print(e);
+            fail();
+        }
     }
 
 }

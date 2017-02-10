@@ -5,7 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "COLUMN_LENGTH")
+@Table(name = "COLUMN_NUMERIC")
 public class ColumnNumeric {
 
     @Column(name = "invalid", precision = 99, scale = 44)

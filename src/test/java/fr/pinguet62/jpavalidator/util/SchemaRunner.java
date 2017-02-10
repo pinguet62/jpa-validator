@@ -9,10 +9,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.runner.notification.RunNotifier;
+import org.junit.internal.runners.statements.Fail;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.Statement;
 
 public class SchemaRunner extends BlockJUnit4ClassRunner {
 
@@ -26,45 +27,47 @@ public class SchemaRunner extends BlockJUnit4ClassRunner {
     }
 
     /**
+     * Execute {@link #resetDatabase(String)} before test method if {@link Script} is present.
+     * <p>
+     * {@inheritDoc}
+     */
+    @Override
+    protected Statement methodBlock(FrameworkMethod method) {
+        try {
+            Script script = method.getAnnotation(Script.class);
+            if (script != null)
+                resetDatabase(script.value());
+        } catch (Throwable e) {
+            return new Fail(e);
+        }
+
+        return super.methodBlock(method);
+    }
+
+    /**
      * Reset the database and execute the SQL file to initialize the new schema.
      *
      * @param path {@link Script#value()}
+     * @throws IOException Error reading resource file.
+     * @throws SQLException Error executing SQL script.
      */
-    private void resetDatabase(String path) {
-        try {
-            connection.createStatement().execute("DROP SCHEMA PUBLIC CASCADE;");
+    private void resetDatabase(String path) throws SQLException, IOException {
+        connection.createStatement().execute("DROP SCHEMA PUBLIC CASCADE;");
 
-            String sql;
-            try (InputStream inputStream = getClass().getResourceAsStream(path)) {
-                sql = IOUtils.toString(inputStream, defaultCharset());
-            }
-
-            // Workaroud to execute command 1 by 1
-            // TODO Split with external secured lib
-            for (String s : sql.split(";")) {
-                s = s.replaceAll("^(\r?\n)*", "");
-                if (s.isEmpty())
-                    continue;
-                s += ";";
-                System.out.println(s);
-                connection.createStatement().executeQuery(s);
-                System.out.println("--------------------------");
-            }
-        } catch (SQLException | IOException e) {
-            throw new RuntimeException(e);
+        String sql;
+        try (InputStream inputStream = getClass().getResourceAsStream(path)) {
+            sql = IOUtils.toString(inputStream, defaultCharset());
         }
-    }
 
-    @Override
-    protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-        Script script = method.getAnnotation(Script.class);
-        if (script == null)
-            throw new UnsupportedOperationException(
-                    "Method " + method + " must be annotated with " + Script.class.getSimpleName());
-        String path = script.value();
-        resetDatabase(path);
-
-        super.runChild(method, notifier);
+        // Workaroud to execute command 1 by 1
+        // TODO Split with external secured lib
+        for (String s : sql.split(";")) {
+            s = s.replaceAll("^(\r?\n)*", "");
+            if (s.isEmpty())
+                continue;
+            s += ";";
+            connection.createStatement().executeQuery(s);
+        }
     }
 
 }

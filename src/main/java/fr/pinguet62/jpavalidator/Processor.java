@@ -1,5 +1,6 @@
 package fr.pinguet62.jpavalidator;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import java.lang.reflect.Field;
@@ -23,7 +24,6 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import fr.pinguet62.jpavalidator.checker.Checker;
-import fr.pinguet62.jpavalidator.checker.Checker.NotImplementedException;
 
 /**
  * @todo Support for composite {@link IdClass}
@@ -39,6 +39,9 @@ public class Processor implements Consumer<List<Class<?>>> {
         return (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
     }
 
+    // TODO Thread safe
+    private final ValidationException validation = new ValidationException();
+
     private final Checker visitor;
 
     public Processor(Checker visitor) {
@@ -49,7 +52,8 @@ public class Processor implements Consumer<List<Class<?>>> {
     public void accept(List<Class<?>> entities) {
         for (Class<?> entity : entities) {
             String tableName = getTableName(entity);
-            doCheck(() -> visitor.checkTable(tableName));
+            doCheck(() -> visitor.checkTable(tableName),
+                    () -> validation.getErrors().add(format("Error with entity %s and table %s", entity.getName(), tableName)));
 
             for (Field field : entity.getDeclaredFields()) {
                 // Not mapped
@@ -59,21 +63,26 @@ public class Processor implements Consumer<List<Class<?>>> {
                 Column column = field.getDeclaredAnnotation(Column.class);
                 if (column != null) {
                     String columnName = column.name();
-                    doCheck(() -> visitor.checkColumn(tableName, columnName, column.nullable()));
+                    doCheck(() -> visitor.checkColumn(tableName, columnName, column.nullable()), () -> validation.getErrors()
+                            .add(format("Error with entity %s and column %s", entity.getName(), columnName)));
 
                     // Character
                     if (field.getType().equals(String.class)) {
                         int length = (column == null ? 255 : column.length());
-                        doCheck(() -> visitor.checkCharacter(tableName, columnName, length));
+                        doCheck(() -> visitor.checkCharacter(tableName, columnName, length), () -> validation.getErrors()
+                                .add(format("Error with entity %s and column character %s", entity.getName(), columnName)));
                     }
                     // Numeric
                     if (asList(Float.class, Long.class, BigDecimal.class).contains(field.getType()))
-                        doCheck(() -> visitor.checkNumeric(tableName, columnName, column.precision(), column.scale()));
+                        doCheck(() -> visitor.checkNumeric(tableName, columnName, column.precision(), column.scale()),
+                                () -> validation.getErrors().add(
+                                        format("Error with entity %s and column numeric %s", entity.getName(), columnName)));
 
                     // Primary key
                     Id id = field.getDeclaredAnnotation(Id.class);
                     if (id != null)
-                        doCheck(() -> visitor.checkId(tableName, columnName));
+                        doCheck(() -> visitor.checkId(tableName, columnName), () -> validation.getErrors()
+                                .add(format("Error with entity %s and PK %s", entity.getName(), columnName)));
                 }
 
                 // Foreign key: ManyToOne or OneToOne
@@ -117,6 +126,9 @@ public class Processor implements Consumer<List<Class<?>>> {
                 }
             }
         }
+
+        if (!validation.getErrors().isEmpty())
+            throw validation;
     }
 
     /** @see ManyToMany */
@@ -126,14 +138,17 @@ public class Processor implements Consumer<List<Class<?>>> {
         {
             // Direct
             JoinColumn joinColumn = joinTable.joinColumns()[0];
-            doCheck(() -> visitor.checkForeignKey(linkTableName, joinColumn.name(), tableName));
+            doCheck(() -> visitor.checkForeignKey(linkTableName, joinColumn.name(), tableName), () -> validation.getErrors()
+                    .add(format("Error with FK from %s.%s to %s", linkTableName, joinColumn.name(), tableName)));
         }
         {
             // Reverse
             JoinColumn joinColumn = joinTable.inverseJoinColumns()[0];
             Class<?> targetEntity = getFirstArgumentType(field.getGenericType());
             String targetTableName = getTableName(targetEntity);
-            doCheck(() -> visitor.checkForeignKey(linkTableName, joinColumn.name(), targetTableName));
+            doCheck(() -> visitor.checkForeignKey(linkTableName, joinColumn.name(), targetTableName),
+                    () -> validation.getErrors()
+                            .add(format("Error with FK from %s.%s to %s", linkTableName, joinColumn.name(), targetTableName)));
         }
     }
 
@@ -143,17 +158,15 @@ public class Processor implements Consumer<List<Class<?>>> {
         if (joinColumn != null) {
             String tgtTableName = getTableName(field.getType());
             String columnName = joinColumn.name();
-            doCheck(() -> visitor.checkForeignKey(tableName, columnName, tgtTableName));
+            doCheck(() -> visitor.checkForeignKey(tableName, columnName, tgtTableName), () -> validation.getErrors()
+                    .add(format("Error with FK from %s.%s to %s", tableName, columnName, tgtTableName)));
         }
     }
 
-    private void doCheck(Supplier<Boolean> fct) {
-        // default
-        try {
-            boolean success = fct.get();
-            if (!success)
-                System.err.println("Invalid");
-        } catch (NotImplementedException e) {}
+    private void doCheck(Supplier<Boolean> fct, Runnable errorFct) {
+        boolean success = fct.get();
+        if (!success)
+            errorFct.run();
     }
 
     private String getTableName(Class<?> entity) {
