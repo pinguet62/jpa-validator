@@ -15,6 +15,6 @@ public class Employee {
     @ManyToMany
     @JoinTable(name = "MANYTOMANY_LINK", joinColumns = { @JoinColumn(name = "EMPLOYEE_ID") }, inverseJoinColumns = {
             @JoinColumn(name = "PROJECT_ID") })
-    private List<Project> projects;
+    List<Project> projects;
 
 }

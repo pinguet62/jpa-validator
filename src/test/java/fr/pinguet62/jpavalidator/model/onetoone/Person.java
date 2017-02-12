@@ -11,6 +11,6 @@ public class Person {
 
     @OneToOne
     @JoinColumn(name = "address_id")
-    private Address address;
+    Address address;
 
 }

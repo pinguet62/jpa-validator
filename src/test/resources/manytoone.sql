@@ -1,9 +1,9 @@
 create table MANYTOONE_PERSON (
-	id_person character varying(99) primary key
+	id_person character varying(99) /*not null*/ primary key
 );
 
 create table MANYTOONE_BAD (
-	id_bad character varying(99) primary key
+	id_bad character varying(99) /*not null*/ primary key
 );
 
 create table MANYTOONE_CAR (

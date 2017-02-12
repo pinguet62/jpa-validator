@@ -11,6 +11,6 @@ import javax.persistence.Table;
 public class Project {
 
     @ManyToMany(mappedBy = "projects")
-    private List<Employee> employees;
+    List<Employee> employees;
 
 }

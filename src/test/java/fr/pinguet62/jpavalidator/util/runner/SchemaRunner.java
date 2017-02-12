@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.util;
+package fr.pinguet62.jpavalidator.util.runner;
 
 import static java.nio.charset.Charset.defaultCharset;
 
@@ -9,12 +9,15 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.Test;
 import org.junit.internal.runners.statements.Fail;
+import org.junit.runner.Runner;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
+/** JUnit {@link Runner} who get {@link Script} and execute the SQL file before each {@link Test} method. */
 public class SchemaRunner extends BlockJUnit4ClassRunner {
 
     public static final String DATABASE = "jdbc:hsqldb:mem:jpavalidator";

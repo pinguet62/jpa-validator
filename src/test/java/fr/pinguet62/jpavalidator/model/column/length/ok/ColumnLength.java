@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.model.column;
+package fr.pinguet62.jpavalidator.model.column.length.ok;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -8,10 +8,7 @@ import javax.persistence.Table;
 @Table(name = "COLUMN_LENGTH")
 public class ColumnLength {
 
-    @Column(name = "invalid", length = 1)
-    private String invalid;
-
     @Column(name = "ok", length = 99)
-    private String ok;
+    String ok;
 
 }

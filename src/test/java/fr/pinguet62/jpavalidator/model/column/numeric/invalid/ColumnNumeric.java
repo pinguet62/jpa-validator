@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.model.column;
+package fr.pinguet62.jpavalidator.model.column.numeric.invalid;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,9 +9,6 @@ import javax.persistence.Table;
 public class ColumnNumeric {
 
     @Column(name = "invalid", precision = 99, scale = 44)
-    private float invalid;
-
-    @Column(name = "decimal", precision = 5, scale = 2)
-    private float ok;
+    float invalid;
 
 }

@@ -10,7 +10,7 @@ Checker checker = new JdbcMetadataChecker("jdbc:postgresql://HOST:PORT/DATABASE?
 The `@Entity` classes: `List<Class<?>>`.  
 You can use the util class:
 ```java
-List<Class<?>> entities = new EntityScanner("foo.bar.pack").get();
+List<Class<?>> entities = JpaUtils.getEntities("foo.bar.pack");
 ```
 
 Run check:
@@ -18,13 +18,16 @@ Run check:
 new Processor(checker).accept(entities);
 ```
 
+## VS Hibernate
+
+If you are using **Hibernate**, you can use the `hibernate.hbm2ddl.auto` *configuration* key with``validate` value.  
+But the validation is limited to: table & column name, `@Entity` existing & relationships.  
+This library (try) add full support validation: foreign key between entities, `nullable` & `length` constraints, ...
+
 ## TODO
 
+In progress support:
 * JPA:
 	* composite ID: `@IdClass`
-	* multi join columns: `@JoinTable(joinColumns)`
-* Validation:
-	* Exception: custom
-	* Message: explicite
-* Support: other databases
-* Testing
+	* multi join columns: `@JoinTable(joinColumns, inverseJoinColumns)`
+	* unique constraints: ``@Table(uniqueConstraints)`

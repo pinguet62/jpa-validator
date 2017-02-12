@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.checker;
+package fr.pinguet62.jpavalidator;
 
 import static java.sql.DatabaseMetaData.columnNoNulls;
 import static java.sql.DatabaseMetaData.columnNullable;
@@ -11,8 +11,24 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-/** Implementation of {@link Checker} for PostreSQL. */
-public class JdbcMetadataChecker implements Checker {
+import javax.annotation.Generated;
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+/**
+ * Visitor pattern used to check all types of JPA constraints: PK, FK, length, numeric, ...
+ * <p>
+ * Return {@code true} if is valid, {@code false} otherwise.<br>
+ * Throw {@link NotImplementedException} if not implemented.
+ */
+public abstract class JdbcMetadataChecker {
 
     static void print(ResultSet resultSet) throws SQLException {
         System.out.println("==================================================");
@@ -29,32 +45,49 @@ public class JdbcMetadataChecker implements Checker {
         System.out.println("==================================================");
     }
 
-    private final String catalog;
+    protected final String catalog;
+
+    protected final Connection connection;
 
     private final DatabaseMetaData metadata;
 
-    private final String schema;
+    protected final String schema;
 
     public JdbcMetadataChecker(String databaseUrl) throws SQLException {
-        Connection connection = DriverManager.getConnection(databaseUrl);
+        connection = DriverManager.getConnection(databaseUrl);
         catalog = connection.getCatalog();
         schema = connection.getSchema();
         metadata = connection.getMetaData();
     }
 
-    @Override
+    /** @see GeneratedValue */
+    public boolean checkAutoIncrement(String tableName, String columnName, boolean autoIncrement) {
+        try {
+            ResultSet resultSet = metadata.getColumns(catalog, schema, tableName.toUpperCase(), columnName.toUpperCase());
+            return resultSet.next() && resultSet.getString("IS_AUTOINCREMENT").equals(convertBoolean(autoIncrement));
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
+    }
+
+    /** @param length {@link Column#length()} */
     public boolean checkCharacter(String tableName, String columnName, int length) {
         try {
             ResultSet resultSet = metadata.getColumns(catalog, schema, tableName.toUpperCase(), columnName.toUpperCase());
             return resultSet.next() && resultSet.getInt("COLUMN_SIZE") == length;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SQLRuntimeException(e);
         }
     }
 
-    @Override
+    /**
+     * @param columnName {@link Column#name()}
+     * @param nullable {@link Column#nullable()}
+     */
     public boolean checkColumn(String tableName, String columnName, boolean nullable) {
         try {
+            print(metadata.getPrimaryKeys(catalog, schema, tableName.toUpperCase()));
+
             ResultSet resultSet = metadata.getColumns(catalog, schema, tableName.toUpperCase(), columnName.toUpperCase());
             if (!resultSet.next())
                 return false;
@@ -62,11 +95,17 @@ public class JdbcMetadataChecker implements Checker {
                 throw new RuntimeException("???");
             return resultSet.getInt("NULLABLE") == (nullable ? columnNullable : columnNoNulls);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SQLRuntimeException(e);
         }
     }
 
-    @Override
+    /**
+     * @param srcTableName Source {@link Table#name()}
+     * @param columnName Source column name, defined by {@link JoinColumn#name()}
+     * @param tgtTableName Target {@link Table#name()}
+     * @see ManyToOne
+     * @see OneToOne
+     */
     public boolean checkForeignKey(String tableName, String columnName, String tgtTableName) {
         try {
             ResultSet fkResultSet = metadata.getImportedKeys(catalog, schema, tableName.toUpperCase());
@@ -91,12 +130,29 @@ public class JdbcMetadataChecker implements Checker {
                 }
             return false;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SQLRuntimeException(e);
         }
     }
 
-    @Override
-    public boolean checkId(String tableName, String columnName) {
+    /**
+     * @param precision {@link Column#precision()}
+     * @param scale {@link Column#scale()}
+     */
+    public boolean checkNumeric(String tableName, String columnName, int precision, int scale) {
+        try {
+            ResultSet resultSet = metadata.getColumns(catalog, schema, tableName.toUpperCase(), columnName.toUpperCase());
+            return resultSet.next() && resultSet.getInt("COLUMN_SIZE") == precision
+                    && resultSet.getInt("DECIMAL_DIGITS") == scale;
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
+    }
+
+    /**
+     * @see Id
+     * @see Generated
+     */
+    public boolean checkPrimaryKey(String tableName, String columnName) {
         try {
             ResultSet resultSet = metadata.getPrimaryKeys(catalog, schema, tableName.toUpperCase());
             while (resultSet.next())
@@ -104,28 +160,27 @@ public class JdbcMetadataChecker implements Checker {
                     return true;
             return false;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SQLRuntimeException(e);
         }
     }
 
-    @Override
-    public boolean checkNumeric(String tableName, String columnName, int precision, int scale) {
-        try {
-            ResultSet resultSet = metadata.getColumns(catalog, schema, tableName.toLowerCase(), columnName.toLowerCase());
-            return resultSet.next() && resultSet.getInt("COLUMN_SIZE") == precision
-                    && resultSet.getInt("DECIMAL_DIGITS") == scale;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    /**
+     * @see GenerationType#SEQUENCE
+     * @see SequenceGenerator
+     */
+    public abstract boolean checkSequence(String sequence);
 
-    @Override
+    /** @see Table#name() */
     public boolean checkTable(String tableName) {
         try {
             return metadata.getTables(catalog, schema, tableName.toUpperCase(), null).next();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new SQLRuntimeException(e);
         }
+    }
+
+    private String convertBoolean(boolean value) {
+        return value ? "YES" : "NO";
     }
 
 }

@@ -9,6 +9,6 @@ import javax.persistence.Table;
 public class Address {
 
     @OneToOne(mappedBy = "address")
-    private Person person;
+    Person person;
 
 }

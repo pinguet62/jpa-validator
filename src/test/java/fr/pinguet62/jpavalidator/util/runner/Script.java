@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.util;
+package fr.pinguet62.jpavalidator.util.runner;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
