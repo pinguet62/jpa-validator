@@ -26,18 +26,25 @@ public class JpaUtils {
      * List all {@link Field} annotated with {@code javax.persistence} annotations.
      * <p>
      * Ignore {@link Transient}.<br>
-     * Iterate on {@link Embedded} elements.
+     * Recursive iteration into {@link Embedded} elements.<br>
+     * Recursive iteration into {@link Class#getSuperclass()}.
      */
     public static List<Field> getAnnotatedFields(Class<?> entity) {
         List<Field> fields = new ArrayList<>();
+
         for (Field field : entity.getDeclaredFields()) {
             if (field.isAnnotationPresent(Transient.class))
                 continue;
+
             if (field.isAnnotationPresent(Embedded.class))
                 fields.addAll(getAnnotatedFields(field.getType()));
             else
                 fields.add(field);
         }
+
+        if (entity.getSuperclass() != null) // Object.class.getSuperclass() == null
+            fields.addAll(getAnnotatedFields(entity.getSuperclass()));
+
         return fields;
     }
 

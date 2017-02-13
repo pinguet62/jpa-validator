@@ -60,7 +60,7 @@ public class Processor implements Consumer<List<Class<?>>> {
                     if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(GeneratedValue.class)) {
                         if (column.nullable() == false) {
                             validation.getErrors()
-                                    .add(display(field) + ": @" + Column.class.getSimpleName()
+                                    .add(display(entity, field) + ": @" + Column.class.getSimpleName()
                                             + "(nullable) must be true when used with @" + Id.class.getSimpleName() + " & @"
                                             + GeneratedValue.class.getSimpleName());
                             continue;
@@ -69,44 +69,45 @@ public class Processor implements Consumer<List<Class<?>>> {
                     } else
                         nullable = column.nullable();
                     doCheck(() -> visitor.checkColumn(tableName, columnName, nullable),
-                            () -> validation.getErrors().add(display(field) + ": error with column " + columnName));
+                            () -> validation.getErrors().add(display(entity, field) + ": error with column " + columnName));
 
                     // Character
                     if (field.getType().equals(String.class)) {
                         int length = (column == null ? 255 : column.length());
                         doCheck(() -> visitor.checkCharacter(tableName, columnName, length), () -> validation.getErrors()
-                                .add(display(field) + ": error with column character " + columnName));
+                                .add(display(entity, field) + ": error with column character " + columnName));
                     }
                     // Numeric
                     if (asList(Float.TYPE, Float.class, BigDecimal.class).contains(field.getType()))
                         doCheck(() -> visitor.checkNumeric(tableName, columnName, column.precision(), column.scale()),
-                                () -> validation.getErrors().add(display(field) + ": error with column numeric " + columnName));
+                                () -> validation.getErrors()
+                                        .add(display(entity, field) + ": error with column numeric " + columnName));
 
                     // Primary key
                     if (field.isAnnotationPresent(Id.class))
-                        checkId(tableName, columnName, field);
+                        checkId(tableName, columnName, entity, field);
                 }
 
                 // Foreign key: ManyToOne or OneToOne
                 if (field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class))
-                    checkManyToOne(tableName, field);
+                    checkManyToOne(tableName, entity, field);
 
                 // OneToMany
                 if (field.isAnnotationPresent(OneToMany.class))
-                    checkOneToMany(field);
+                    checkOneToMany(entity, field);
 
                 // ManyToMany
                 if (field.isAnnotationPresent(ManyToMany.class)) {
                     ManyToMany manyToMany = field.getDeclaredAnnotation(ManyToMany.class);
                     // JoinTable
                     if (field.isAnnotationPresent(JoinTable.class) && manyToMany.mappedBy().equals(""))
-                        checkManyToMany(tableName, field);
+                        checkManyToMany(tableName, entity, field);
                     // mappedBy
                     else if (!manyToMany.mappedBy().equals("") && !field.isAnnotationPresent(JoinTable.class)) {
                         Class<?> targetEntity = JpaUtils.getFirstArgumentType(field.getGenericType());
                         String mappedTableName = JpaUtils.getTableName(targetEntity);
                         Field mappedByField = JpaUtils.getTargetField(targetEntity, manyToMany.mappedBy());
-                        checkManyToMany(mappedTableName, mappedByField);
+                        checkManyToMany(mappedTableName, entity, mappedByField);
                     } else {
                         validation.getErrors().add("@" + ManyToMany.class.getSimpleName()
                                 + " must define, either #mappedBy(), or @" + JoinTable.class.getSimpleName());
@@ -120,17 +121,14 @@ public class Processor implements Consumer<List<Class<?>>> {
             throw validation;
     }
 
-    private String display(Class<?> entity) {
-        return entity.getSimpleName();
-    }
-
     /** @see Id */
-    private void checkId(String tableName, String columnName, Field field) {
+    private void checkId(String tableName, String columnName, Class<?> entity, Field field) {
         if (!field.isAnnotationPresent(Id.class))
-            throw new IllegalArgumentException(display(field) + ": must be annotated with " + ManyToMany.class.getSimpleName());
+            throw new IllegalArgumentException(
+                    display(entity, field) + ": must be annotated with " + ManyToMany.class.getSimpleName());
 
-        doCheck(() -> visitor.checkPrimaryKey(tableName, columnName),
-                () -> validation.getErrors().add(format(display(field) + ": error with PK %s.%s", tableName, columnName)));
+        doCheck(() -> visitor.checkPrimaryKey(tableName, columnName), () -> validation.getErrors()
+                .add(format(display(entity, field) + ": error with PK %s.%s", tableName, columnName)));
 
         if (field.isAnnotationPresent(GeneratedValue.class)) {
             GeneratedValue generatedValue = field.getDeclaredAnnotation(GeneratedValue.class);
@@ -140,8 +138,8 @@ public class Processor implements Consumer<List<Class<?>>> {
                         SequenceGenerator.class);
                 if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
                     validation.getErrors()
-                            .add(display(field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy=" + AUTO.name()
-                                    + ") cannot be used with theses annotations: "
+                            .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy="
+                                    + AUTO.name() + ") cannot be used with theses annotations: "
                                     + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
                     return;
                 }
@@ -153,22 +151,22 @@ public class Processor implements Consumer<List<Class<?>>> {
                         SequenceGenerator.class);
                 if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
                     validation.getErrors()
-                            .add(display(field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy=" + IDENTITY.name()
-                                    + ") cannot be used with theses annotations: "
+                            .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy="
+                                    + IDENTITY.name() + ") cannot be used with theses annotations: "
                                     + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
                     return;
                 }
 
-                doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, true), () -> validation.getErrors()
-                        .add(format(display(field) + ": error with auto-increment column: %s.%s", tableName, columnName)));
+                doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, true), () -> validation.getErrors().add(
+                        format(display(entity, field) + ": error with auto-increment column: %s.%s", tableName, columnName)));
             }
             // TABLE
             else if (generatedValue.strategy().equals(TABLE)) {
                 Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(SequenceGenerator.class);
                 if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
                     validation.getErrors()
-                            .add(display(field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy=" + TABLE.name()
-                                    + ") cannot be used with theses annotations: "
+                            .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy="
+                                    + TABLE.name() + ") cannot be used with theses annotations: "
                                     + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
                     return;
                 }
@@ -180,21 +178,21 @@ public class Processor implements Consumer<List<Class<?>>> {
                 Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(TableGenerator.class);
                 if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
                     validation.getErrors()
-                            .add(display(field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy=" + SEQUENCE.name()
-                                    + ") cannot be used with theses annotations: "
+                            .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy="
+                                    + SEQUENCE.name() + ") cannot be used with theses annotations: "
                                     + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
                     return;
                 }
 
                 SequenceGenerator sequenceGenerator = JpaUtils.getOnFieldOrClass(field, SequenceGenerator.class);
                 if (sequenceGenerator == null) {
-                    validation.getErrors().add(display(field) + ": (field or class) must be annotated with @"
+                    validation.getErrors().add(display(entity, field) + ": (field or class) must be annotated with @"
                             + SequenceGenerator.class.getSimpleName());
                     return;
                 }
 
                 if (!generatedValue.generator().equals(sequenceGenerator.name())) {
-                    validation.getErrors().add(display(field) + ": @" + GeneratedValue.class.getSimpleName()
+                    validation.getErrors().add(display(entity, field) + ": @" + GeneratedValue.class.getSimpleName()
                             + "(generator) and @" + SequenceGenerator.class.getSimpleName() + "(name) doesn't match");
                     return;
                 }
@@ -214,7 +212,7 @@ public class Processor implements Consumer<List<Class<?>>> {
                     SequenceGenerator.class);
             if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
                 validation.getErrors()
-                        .add(display(field) + ": " + GeneratedValue.class.getSimpleName()
+                        .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName()
                                 + " must be used to use theses annotations: "
                                 + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
                 return;
@@ -227,9 +225,10 @@ public class Processor implements Consumer<List<Class<?>>> {
     }
 
     /** @see ManyToMany */
-    private void checkManyToMany(String tableName, Field field) {
+    private void checkManyToMany(String tableName, Class<?> entity, Field field) {
         if (!field.isAnnotationPresent(ManyToMany.class))
-            throw new IllegalArgumentException(display(field) + ": must be annotated with " + ManyToMany.class.getSimpleName());
+            throw new IllegalArgumentException(
+                    display(entity, field) + ": must be annotated with " + ManyToMany.class.getSimpleName());
 
         JoinTable joinTable = field.getDeclaredAnnotation(JoinTable.class);
         String linkTableName = joinTable.name();
@@ -239,8 +238,8 @@ public class Processor implements Consumer<List<Class<?>>> {
                 throw new NotYetImplemented();
             JoinColumn joinColumn = joinTable.joinColumns()[0];
             doCheck(() -> visitor.checkForeignKey(linkTableName, joinColumn.name(), tableName),
-                    () -> validation.getErrors().add(format(display(field) + ": error with FK from %s.%s to %s", linkTableName,
-                            joinColumn.name(), tableName)));
+                    () -> validation.getErrors().add(format(display(entity, field) + ": error with FK from %s.%s to %s",
+                            linkTableName, joinColumn.name(), tableName)));
         }
         {
             // Reverse
@@ -250,19 +249,19 @@ public class Processor implements Consumer<List<Class<?>>> {
             Class<?> targetEntity = JpaUtils.getFirstArgumentType(field.getGenericType());
             String targetTableName = JpaUtils.getTableName(targetEntity);
             doCheck(() -> visitor.checkForeignKey(linkTableName, joinColumn.name(), targetTableName),
-                    () -> validation.getErrors().add(format(display(field) + ": error with FK from %s.%s to %s", linkTableName,
-                            joinColumn.name(), targetTableName)));
+                    () -> validation.getErrors().add(format(display(entity, field) + ": error with FK from %s.%s to %s",
+                            linkTableName, joinColumn.name(), targetTableName)));
         }
     }
 
     /** @see ManyToOne */
-    private void checkManyToOne(String tableName, Field field) {
+    private void checkManyToOne(String tableName, Class<?> entity, Field field) {
         JoinColumn joinColumn = field.getDeclaredAnnotation(JoinColumn.class);
         if (joinColumn != null) {
             String tgtTableName = JpaUtils.getTableName(field.getType());
             String columnName = joinColumn.name();
-            doCheck(() -> visitor.checkForeignKey(tableName, columnName, tgtTableName), () -> validation.getErrors()
-                    .add(format(display(field) + ": error with FK from %s.%s to %s", tableName, columnName, tgtTableName)));
+            doCheck(() -> visitor.checkForeignKey(tableName, columnName, tgtTableName), () -> validation.getErrors().add(
+                    format(display(entity, field) + ": error with FK from %s.%s to %s", tableName, columnName, tgtTableName)));
         }
     }
 
@@ -271,9 +270,10 @@ public class Processor implements Consumer<List<Class<?>>> {
      *
      * @see OneToMany
      */
-    private void checkOneToMany(Field field) {
+    private void checkOneToMany(Class<?> entity, Field field) {
         if (!field.isAnnotationPresent(OneToMany.class))
-            throw new IllegalArgumentException(display(field) + ": must be annotated with " + OneToMany.class.getSimpleName());
+            throw new IllegalArgumentException(
+                    display(entity, field) + ": must be annotated with " + OneToMany.class.getSimpleName());
 
         if (field.isAnnotationPresent(JoinTable.class))
             throw new NotYetImplemented();
@@ -284,22 +284,26 @@ public class Processor implements Consumer<List<Class<?>>> {
         Field mappedByField = JpaUtils.getTargetField(targetEntity, oneToMany.mappedBy());
         Class<?> mappedByFieldType = mappedByField.getType();
         if (!mappedByFieldType.equals(field.getDeclaringClass())) {
-            validation.getErrors().add(display(field) + ": is \"mappedBy\" to target field of different type");
+            validation.getErrors().add(display(entity, field) + ": is \"mappedBy\" to target field of different type");
             return;
         }
 
         String mappedTableName = JpaUtils.getTableName(targetEntity);
-        checkManyToOne(mappedTableName, mappedByField);
+        checkManyToOne(mappedTableName, entity, mappedByField);
+    }
+
+    private String display(Class<?> entity) {
+        return entity.getSimpleName();
+    }
+
+    private String display(Class<?> entity, Field field) {
+        return entity.getSimpleName() + "." + field.getName();
     }
 
     private void doCheck(Supplier<Boolean> fct, Runnable errorFct) {
         boolean success = fct.get();
         if (!success)
             errorFct.run();
-    }
-
-    private String display(Field field) {
-        return field.getDeclaringClass().getSimpleName() + "." + field.getName();
     }
 
 }
