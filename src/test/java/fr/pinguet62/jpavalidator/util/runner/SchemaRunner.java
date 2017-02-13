@@ -1,14 +1,10 @@
 package fr.pinguet62.jpavalidator.util.runner;
 
-import static java.nio.charset.Charset.defaultCharset;
-
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.internal.runners.statements.Fail;
 import org.junit.runner.Runner;
@@ -50,27 +46,13 @@ public class SchemaRunner extends BlockJUnit4ClassRunner {
     /**
      * Reset the database and execute the SQL file to initialize the new schema.
      *
-     * @param path {@link Script#value()}
-     * @throws IOException Error reading resource file.
-     * @throws SQLException Error executing SQL script.
+     * @param sqlScripts {@link Script#value()}
+     * @throws SQLException Error executing SQL.
      */
-    private void resetDatabase(String path) throws SQLException, IOException {
+    private void resetDatabase(String[] sqlScripts) throws SQLException, IOException {
         connection.createStatement().execute("DROP SCHEMA PUBLIC CASCADE;");
-
-        String sql;
-        try (InputStream inputStream = getClass().getResourceAsStream(path)) {
-            sql = IOUtils.toString(inputStream, defaultCharset());
-        }
-
-        // Workaroud to execute command 1 by 1
-        // TODO Split with external secured lib
-        for (String s : sql.split(";")) {
-            s = s.replaceAll("^(\r?\n)*", "");
-            if (s.isEmpty())
-                continue;
-            s += ";";
-            connection.createStatement().executeQuery(s);
-        }
+        for (String sqlScript : sqlScripts)
+            connection.createStatement().executeQuery(sqlScript);
     }
 
 }

@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 @Target({ METHOD })
 public @interface Script {
 
-    /** Path the the SQL resource file. */
-    String value();
+    /** The SQL script to execute. */
+    String[] value();
 
 }
