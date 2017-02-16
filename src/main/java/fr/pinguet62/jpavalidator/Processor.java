@@ -107,10 +107,14 @@ public class Processor implements Consumer<List<Class<?>>> {
                         Class<?> targetEntity = JpaUtils.getFirstArgumentType(field.getGenericType());
                         String mappedTableName = JpaUtils.getTableName(targetEntity);
                         Field mappedByField = JpaUtils.getTargetField(targetEntity, manyToMany.mappedBy());
+                        if (mappedByField == null) {
+                            validation.getErrors().add(display(entity, field) + ": target #mappedBy() property doesn't exists");
+                            continue;
+                        }
                         checkManyToMany(mappedTableName, entity, mappedByField);
                     } else {
-                        validation.getErrors().add("@" + ManyToMany.class.getSimpleName()
-                                + " must define, either #mappedBy(), or @" + JoinTable.class.getSimpleName());
+                        validation.getErrors().add(display(entity, field) + ": @" + ManyToMany.class.getSimpleName()
+                                + " must define: #mappedBy() attribute or @" + JoinTable.class.getSimpleName());
                         continue;
                     }
                 }
@@ -132,79 +136,15 @@ public class Processor implements Consumer<List<Class<?>>> {
 
         if (field.isAnnotationPresent(GeneratedValue.class)) {
             GeneratedValue generatedValue = field.getDeclaredAnnotation(GeneratedValue.class);
-            // AUTO: JPA implementation
-            if (generatedValue.strategy().equals(AUTO)) {
-                Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(TableGenerator.class,
-                        SequenceGenerator.class);
-                if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
-                    validation.getErrors()
-                            .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy="
-                                    + AUTO.name() + ") cannot be used with theses annotations: "
-                                    + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
-                    return;
-                }
-                throw new NotYetImplemented();
-            }
-            // IDENTITY: PK database constraint
-            else if (generatedValue.strategy().equals(IDENTITY)) {
-                Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(TableGenerator.class,
-                        SequenceGenerator.class);
-                if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
-                    validation.getErrors()
-                            .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy="
-                                    + IDENTITY.name() + ") cannot be used with theses annotations: "
-                                    + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
-                    return;
-                }
 
-                doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, true), () -> validation.getErrors().add(
-                        format(display(entity, field) + ": error with auto-increment column: %s.%s", tableName, columnName)));
-            }
-            // TABLE
-            else if (generatedValue.strategy().equals(TABLE)) {
-                Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(SequenceGenerator.class);
-                if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
-                    validation.getErrors()
-                            .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy="
-                                    + TABLE.name() + ") cannot be used with theses annotations: "
-                                    + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
-                    return;
-                }
-
-                throw new NotYetImplemented();
-            }
-            // SEQUENCE
-            else if (generatedValue.strategy().equals(SEQUENCE)) {
-                Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(TableGenerator.class);
-                if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
-                    validation.getErrors()
-                            .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy="
-                                    + SEQUENCE.name() + ") cannot be used with theses annotations: "
-                                    + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
-                    return;
-                }
-
-                SequenceGenerator sequenceGenerator = JpaUtils.getOnFieldOrClass(field, SequenceGenerator.class);
-                if (sequenceGenerator == null) {
-                    validation.getErrors().add(display(entity, field) + ": (field or class) must be annotated with @"
-                            + SequenceGenerator.class.getSimpleName());
-                    return;
-                }
-
-                if (!generatedValue.generator().equals(sequenceGenerator.name())) {
-                    validation.getErrors().add(display(entity, field) + ": @" + GeneratedValue.class.getSimpleName()
-                            + "(generator) and @" + SequenceGenerator.class.getSimpleName() + "(name) doesn't match");
-                    return;
-                }
-
-                String sequenceName = sequenceGenerator.sequenceName();
-                doCheck(() -> visitor.checkSequence(sequenceName),
-                        () -> validation.getErrors().add("Error with sequence: " + sequenceName));
-
-                doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, true), () -> validation.getErrors()
-                        .add(format("Error with auto-increment column: %s.%s", tableName, columnName)));
-            }
-            // ???
+            if (generatedValue.strategy().equals(AUTO))
+                checkIdAuto(entity, field);
+            else if (generatedValue.strategy().equals(IDENTITY))
+                checkIdIdentity(tableName, columnName, entity, field);
+            else if (generatedValue.strategy().equals(TABLE))
+                checkIdTable(entity, field);
+            else if (generatedValue.strategy().equals(SEQUENCE))
+                checkIdSequence(tableName, columnName, entity, field, generatedValue);
             else
                 throw new RuntimeException("Unknown " + GenerationType.class.getName() + " enum value: " + generatedValue);
         } else {
@@ -222,6 +162,79 @@ public class Processor implements Consumer<List<Class<?>>> {
             // () -> validation.getErrors().add(format("Error with auto-increment column: %s.%s", tableName,
             // columnName)));
         }
+    }
+
+    private void checkIdAuto(Class<?> entity, Field field) {
+        Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(TableGenerator.class, SequenceGenerator.class);
+        if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
+            validation.getErrors()
+                    .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy=" + AUTO.name()
+                            + ") cannot be used with theses annotations: "
+                            + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
+            return;
+        }
+        throw new NotYetImplemented();
+    }
+
+    private void checkIdIdentity(String tableName, String columnName, Class<?> entity, Field field) {
+        Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(TableGenerator.class, SequenceGenerator.class);
+        if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
+            validation.getErrors()
+                    .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy=" + IDENTITY.name()
+                            + ") cannot be used with theses annotations: "
+                            + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
+            return;
+        }
+
+        doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, true), () -> validation.getErrors()
+                .add(format(display(entity, field) + ": error with auto-increment column: %s.%s", tableName, columnName)));
+    }
+
+    private void checkIdSequence(String tableName, String columnName, Class<?> entity, Field field,
+            GeneratedValue generatedValue) {
+        // Control illegal annotations
+        Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(TableGenerator.class);
+        if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
+            validation.getErrors()
+                    .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy=" + SEQUENCE.name()
+                            + ") cannot be used with theses annotations: "
+                            + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
+            return;
+        }
+
+        SequenceGenerator sequenceGenerator = JpaUtils.getFieldOrClassAnnotation(field, SequenceGenerator.class);
+        if (sequenceGenerator == null) {
+            validation.getErrors().add(display(entity, field) + ": (field or class) must be annotated with @"
+                    + SequenceGenerator.class.getSimpleName());
+            return;
+        }
+
+        if (!generatedValue.generator().equals(sequenceGenerator.name())) {
+            validation.getErrors().add(display(entity, field) + ": @" + GeneratedValue.class.getSimpleName()
+                    + "(generator) and @" + SequenceGenerator.class.getSimpleName() + "(name) doesn't match");
+            return;
+        }
+
+        String sequenceName = sequenceGenerator.sequenceName();
+        doCheck(() -> visitor.checkSequence(sequenceName),
+                () -> validation.getErrors().add("Error with sequence: " + sequenceName));
+
+        doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, true),
+                () -> validation.getErrors().add(format("Error with auto-increment column: %s.%s", tableName, columnName)));
+    }
+
+    private void checkIdTable(Class<?> entity, Field field) {
+        // Control illegal annotations
+        Collection<Class<? extends Annotation>> unsupportedAnnotations = asList(SequenceGenerator.class);
+        if (unsupportedAnnotations.stream().anyMatch(field::isAnnotationPresent)) {
+            validation.getErrors()
+                    .add(display(entity, field) + ": " + GeneratedValue.class.getSimpleName() + "(strategy=" + TABLE.name()
+                            + ") cannot be used with theses annotations: "
+                            + unsupportedAnnotations.stream().map(Class::getSimpleName).collect(joining(", ")));
+            return;
+        }
+
+        throw new NotYetImplemented();
     }
 
     /** @see ManyToMany */
@@ -280,16 +293,40 @@ public class Processor implements Consumer<List<Class<?>>> {
 
         OneToMany oneToMany = field.getDeclaredAnnotation(OneToMany.class);
         Class<?> targetEntity = JpaUtils.getFirstArgumentType(field.getGenericType());
-        // Target entity
-        Field mappedByField = JpaUtils.getTargetField(targetEntity, oneToMany.mappedBy());
-        Class<?> mappedByFieldType = mappedByField.getType();
-        if (!mappedByFieldType.equals(field.getDeclaringClass())) {
-            validation.getErrors().add(display(entity, field) + ": is \"mappedBy\" to target field of different type");
+        String mappedTableName = JpaUtils.getTableName(targetEntity);
+
+        // mappedBy
+        if (!oneToMany.mappedBy().equals("") && !field.isAnnotationPresent(JoinColumn.class)) {
+            // Target entity
+            Field mappedByField = JpaUtils.getTargetField(targetEntity, oneToMany.mappedBy());
+            if (mappedByField == null) {
+                validation.getErrors().add(display(entity, field) + ": target #mappedBy() property doesn't exists");
+                return;
+            }
+
+            // Check: same type
+            Class<?> mappedByFieldType = mappedByField.getType();
+            if (!mappedByFieldType.equals(field.getDeclaringClass())) {
+                validation.getErrors().add(display(entity, field) + ": is \"mappedBy\" to target field of different type");
+                return;
+            }
+
+            // Check: ManyToOne reverse mapping
+            checkManyToOne(mappedTableName, entity, mappedByField);
+        }
+        // JoinColumn
+        else if (field.isAnnotationPresent(JoinColumn.class) && oneToMany.mappedBy().equals("")) {
+            JoinColumn joinColumn = field.getDeclaredAnnotation(JoinColumn.class);
+            doCheck(() -> visitor.checkForeignKey(joinColumn.name(), joinColumn.referencedColumnName(), mappedTableName),
+                    () -> validation.getErrors().add(format(display(entity, field) + ": error with FK from %s.%s to %s",
+                            joinColumn.name(), joinColumn.referencedColumnName(), mappedTableName)));
+        }
+        // Bad mapping
+        else {
+            validation.getErrors().add(display(entity, field) + ": @" + OneToMany.class.getSimpleName()
+                    + " must define: #mappedBy() attribute or @" + JoinColumn.class.getSimpleName());
             return;
         }
-
-        String mappedTableName = JpaUtils.getTableName(targetEntity);
-        checkManyToOne(mappedTableName, entity, mappedByField);
     }
 
     private String display(Class<?> entity) {

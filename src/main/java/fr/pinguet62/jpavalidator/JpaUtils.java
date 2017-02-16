@@ -80,7 +80,7 @@ public class JpaUtils {
      *
      * @return {@code null} if not found, otherwise the {@link Annotation} instance.
      */
-    public static <T extends Annotation> T getOnFieldOrClass(Field field, Class<T> annotationType) {
+    public static <T extends Annotation> T getFieldOrClassAnnotation(Field field, Class<T> annotationType) {
         T annotation = field.getDeclaredAnnotation(annotationType);
         if (annotation != null)
             return annotation;
@@ -105,7 +105,7 @@ public class JpaUtils {
         try {
             return targetEntity.getDeclaredField(mappedBy);
         } catch (NoSuchFieldException | SecurityException e) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 
