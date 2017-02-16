@@ -5,9 +5,9 @@ import static java.util.Arrays.asList;
 
 import java.sql.SQLException;
 
-import fr.pinguet62.jpavalidator.HsqldbMetadataChecker;
 import fr.pinguet62.jpavalidator.Processor;
 import fr.pinguet62.jpavalidator.ValidationException;
+import fr.pinguet62.jpavalidator.checker.HsqldbMetadataChecker;
 
 public class TestUtils {
 

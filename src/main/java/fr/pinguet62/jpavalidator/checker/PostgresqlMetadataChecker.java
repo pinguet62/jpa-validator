@@ -1,8 +1,10 @@
-package fr.pinguet62.jpavalidator;
+package fr.pinguet62.jpavalidator.checker;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import fr.pinguet62.jpavalidator.SQLRuntimeException;
 
 /** Extension for <b>PostgreSQL</b> SGBD. */
 public class PostgresqlMetadataChecker extends JdbcMetadataChecker {

@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator;
+package fr.pinguet62.jpavalidator.checker;
 
 import static java.sql.DatabaseMetaData.columnNoNulls;
 import static java.sql.DatabaseMetaData.columnNullable;
@@ -21,6 +21,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import fr.pinguet62.jpavalidator.SQLRuntimeException;
 
 /**
  * Visitor pattern used to check all types of JPA constraints: PK, FK, length, numeric, ...

@@ -30,6 +30,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
 
+import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
+
 /** {@link Entity} validator. */
 public class Processor implements Consumer<List<Class<?>>> {
 
@@ -158,9 +160,8 @@ public class Processor implements Consumer<List<Class<?>>> {
                 return;
             }
 
-            // doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, false),
-            // () -> validation.getErrors().add(format("Error with auto-increment column: %s.%s", tableName,
-            // columnName)));
+            doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, false), () -> validation.getErrors()
+                    .add(format(display(entity, field) + ": error with auto-increment column: %s.%s", tableName, columnName)));
         }
     }
 
@@ -219,8 +220,8 @@ public class Processor implements Consumer<List<Class<?>>> {
         doCheck(() -> visitor.checkSequence(sequenceName),
                 () -> validation.getErrors().add("Error with sequence: " + sequenceName));
 
-        doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, true),
-                () -> validation.getErrors().add(format("Error with auto-increment column: %s.%s", tableName, columnName)));
+        doCheck(() -> visitor.checkAutoIncrement(tableName, columnName, true), () -> validation.getErrors()
+                .add(format(display(entity, field) + ": error with auto-increment column: %s.%s", tableName, columnName)));
     }
 
     private void checkIdTable(Class<?> entity, Field field) {

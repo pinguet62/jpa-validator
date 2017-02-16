@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.model.column.nullable;
+package fr.pinguet62.jpavalidator.model.column;
 
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
 import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
@@ -17,24 +17,24 @@ import fr.pinguet62.jpavalidator.util.runner.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.runner.Script;
 
 @RunWith(SchemaRunner.class)
-public class ColumnNullableInvalidTest {
+public class ColumnNullableTest {
 
     @Entity
     @Table(name = "SAMPLE")
     public static class Sample {
-        @Column(name = "MANDATORY", nullable = true)
+        @Column(name = "MANDATORY", nullable = false)
         Integer mandatory;
 
-        @Column(name = "OPTIONAL", nullable = false)
+        @Column(name = "OPTIONAL", nullable = true)
         Integer optional;
     }
 
     @Test
     @Script("create table SAMPLE ( \n" + //
-            "    MANDATORY int not null, \n" + //
-            "    OPTIONAL int null \n" + //
+            "    MANDATORY int null, \n" + //
+            "    OPTIONAL int not null \n" + //
             ");")
-    public void test() {
+    public void test_ivalid() {
         try {
             runCheck(Sample.class);
             fail();
@@ -43,6 +43,15 @@ public class ColumnNullableInvalidTest {
             assertContainsMessage(e, "MANDATORY");
             assertContainsMessage(e, "OPTIONAL");
         }
+    }
+
+    @Test
+    @Script("create table SAMPLE ( \n" + //
+            "    MANDATORY int not null, \n" + //
+            "    OPTIONAL int null \n" + //
+            ");")
+    public void test_ok() {
+        runCheck(Sample.class);
     }
 
 }
