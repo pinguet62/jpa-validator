@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.model.column;
+package fr.pinguet62.jpavalidator.cases.column;
 
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
 import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;

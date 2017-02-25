@@ -1,7 +1,6 @@
 package fr.pinguet62.jpavalidator;
 
-import static org.springframework.util.ClassUtils.getDefaultClassLoader;
-import static org.springframework.util.ClassUtils.resolveClassName;
+import static fr.pinguet62.jpavalidator.ReflectionUtils.scanClasses;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -15,7 +14,6 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
@@ -55,24 +53,7 @@ public class JpaUtils {
      * @see ClassPathScanningCandidateComponentProvider
      */
     public static List<Class<?>> getEntities(String basePackage) {
-        ClassPathScanningCandidateComponentProvider candidateComponentProvider = new ClassPathScanningCandidateComponentProvider(
-                false);
-        candidateComponentProvider.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
-        List<Class<?>> classes = new ArrayList<>();
-        for (BeanDefinition candidate : candidateComponentProvider.findCandidateComponents(basePackage)) {
-            Class<?> cls = resolveClassName(candidate.getBeanClassName(), getDefaultClassLoader());
-            classes.add(cls);
-        }
-        return classes;
-    }
-
-    /**
-     * Get the first argument {@link Class} of generic type.
-     * <p>
-     * For example {@code List<Foo>} class, this method will return {@code Foo} class.
-     */
-    public static Class<?> getFirstArgumentType(Type genericType) {
-        return (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+        return scanClasses(basePackage, new AnnotationTypeFilter(Entity.class));
     }
 
     /**
@@ -85,6 +66,15 @@ public class JpaUtils {
         if (annotation != null)
             return annotation;
         return field.getDeclaringClass().getDeclaredAnnotation(annotationType);
+    }
+
+    /**
+     * Get the first argument {@link Class} of generic type.
+     * <p>
+     * For example {@code List<Foo>} class, this method will return {@code Foo} class.
+     */
+    public static Class<?> getFirstArgumentType(Type genericType) {
+        return (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
     }
 
     /** @return {@link Table#name()} */

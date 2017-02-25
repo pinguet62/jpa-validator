@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.model.onetomany;
+package fr.pinguet62.jpavalidator.cases.onetomany;
 
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
 

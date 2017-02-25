@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.model.column;
+package fr.pinguet62.jpavalidator.cases.column;
 
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
 import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
@@ -34,7 +34,7 @@ public class ColumnNullableTest {
             "    MANDATORY int null, \n" + //
             "    OPTIONAL int not null \n" + //
             ");")
-    public void test_ivalid() {
+    public void test_invalid() {
         try {
             runCheck(Sample.class);
             fail();

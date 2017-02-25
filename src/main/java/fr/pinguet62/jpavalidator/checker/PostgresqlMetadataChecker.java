@@ -7,8 +7,8 @@ import java.sql.SQLException;
 import fr.pinguet62.jpavalidator.SQLRuntimeException;
 
 /** Extension for <b>PostgreSQL</b> SGBD. */
-public class PostgresqlMetadataChecker extends JdbcMetadataChecker {
-
+public class PostgresqlMetadataChecker /*extends JdbcMetadataChecker*/ {
+/*
     public PostgresqlMetadataChecker(String databaseUrl) throws SQLException {
         super(databaseUrl);
     }
@@ -17,7 +17,7 @@ public class PostgresqlMetadataChecker extends JdbcMetadataChecker {
     public boolean checkSequence(String sequenceName) {
         try {
             PreparedStatement query = connection.prepareStatement(
-                    "SELECT * FROM information_schema.sequences where SEQUENCE_CATALOG = ? and SEQUENCE_SCHEMA = ? and SEQUENCE_NAME = ?");
+                    "SELECT * FROM information_schema.sequences where SEQUENCE_CATALOG and SEQUENCE_SCHEMA and SEQUENCE_NAME");
             query.setString(1, catalog);
             query.setString(2, schema);
             query.setString(3, sequenceName);
@@ -27,5 +27,5 @@ public class PostgresqlMetadataChecker extends JdbcMetadataChecker {
             throw new SQLRuntimeException(e);
         }
     }
-
+*/
 }

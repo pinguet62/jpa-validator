@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import javax.annotation.Generated;
@@ -32,20 +31,7 @@ import fr.pinguet62.jpavalidator.SQLRuntimeException;
  */
 public abstract class JdbcMetadataChecker {
 
-    static void print(ResultSet resultSet) throws SQLException {
-        System.out.println("==================================================");
-        String sep = " - ";
-        ResultSetMetaData md = resultSet.getMetaData();
-        for (int i = 1; i <= md.getColumnCount(); ++i)
-            System.out.print(md.getColumnName(i) + sep);
-        System.out.println();
-        while (resultSet.next()) {
-            for (int i = 1; i <= md.getColumnCount(); ++i)
-                System.out.print(resultSet.getObject(i) + sep);
-            System.out.println();
-        }
-        System.out.println("==================================================");
-    }
+    public static JdbcMetadataChecker INSTANCE;
 
     protected final String catalog;
 
@@ -71,6 +57,20 @@ public abstract class JdbcMetadataChecker {
             throw new SQLRuntimeException(e);
         }
     }
+
+    /**
+     * @see GeneratedValue
+     * @see GenerationType#IDENTITY
+     * @see SequenceGenerator
+     */
+    public abstract boolean checkAutoIncrementByIdentity(String tableName, String columnName);
+
+    /**
+     * @see GeneratedValue
+     * @see GenerationType#SEQUENCE
+     * @see SequenceGenerator
+     */
+    public abstract boolean checkAutoIncrementBySequence(String tableName, String columnName, String sequence);
 
     /** @param length {@link Column#length()} */
     public boolean checkCharacter(String tableName, String columnName, int length) {
@@ -133,6 +133,8 @@ public abstract class JdbcMetadataChecker {
             throw new SQLRuntimeException(e);
         }
     }
+
+    public abstract boolean checkIsAutoIncrementByAnySequence(String tableName, String columnName);
 
     /**
      * @param precision {@link Column#precision()}

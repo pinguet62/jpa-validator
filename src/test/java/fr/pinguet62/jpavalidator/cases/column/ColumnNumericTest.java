@@ -1,13 +1,12 @@
-package fr.pinguet62.jpavalidator.model.manytoone;
+package fr.pinguet62.jpavalidator.cases.column;
 
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
 import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.junit.Test;
@@ -18,31 +17,31 @@ import fr.pinguet62.jpavalidator.util.runner.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.runner.Script;
 
 @RunWith(SchemaRunner.class)
-public class ManytooneTypeInvalidTest {
+public class ColumnNumericTest {
 
     @Entity
-    @Table(name = "CAR")
-    public static class Car {
-        @ManyToOne
-        @JoinColumn(name = "FK")
-        Person person;
+    @Table(name = "SAMPLE")
+    public static class Sample {
+        @Column(name = "COL", precision = 5, scale = 2)
+        float field;
     }
 
-    @Entity
-    @Table(name = "PERSON")
-    public static class Person {}
-
     @Test
-    @Script({ "create table PERSON ( PK character varying(99) /*not null*/ primary key );",
-            "create table CAR ( FK character varying(42) references PERSON (PK) );" })
-    public void test() {
+    @Script("create table SAMPLE ( COL numeric(99,42) );")
+    public void test_error() {
         try {
-            runCheck(Car.class);
+            runCheck(Sample.class);
             fail();
         } catch (ValidationException e) {
             assertEquals(1, e.getErrors().size());
-            assertContainsMessage(e, "FK");
+            assertContainsMessage(e, "COL");
         }
+    }
+
+    @Test
+    @Script("create table SAMPLE ( COL numeric(5,2) );")
+    public void test_ok() {
+        runCheck(Sample.class);
     }
 
 }
