@@ -20,17 +20,21 @@ public class MappedbyOnetooneValidator extends AbstractValidator {
     @Override
     protected boolean doProcess(Field field) {
         OneToOne oneToOne = field.getDeclaredAnnotation(OneToOne.class);
+
+        // Target property: exists
         Class<?> tgtEntity = field.getType();
         Field mappedbyField = JpaUtils.getTargetField(tgtEntity, oneToOne.mappedBy());
         if (mappedbyField == null) {
             throwError("mappedBy target property not found");
             return false;
         }
-        // Target property of my type
+
+        // Target property: same type
         if (!mappedbyField.getType().equals(entity)) {
             throwError("mappedBy target property is not of same type");
             return false;
         }
+
         return true;
     }
 

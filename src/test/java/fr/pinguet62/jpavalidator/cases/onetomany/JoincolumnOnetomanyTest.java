@@ -1,7 +1,9 @@
 package fr.pinguet62.jpavalidator.cases.onetomany;
 
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
+import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 
@@ -18,35 +20,41 @@ import fr.pinguet62.jpavalidator.ValidationException;
 import fr.pinguet62.jpavalidator.util.runner.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.runner.Script;
 
-/**
- * The reverse {@link OneToMany#mappedBy()} target {@link Field} is not of the same type as the current {@link Class}.
- */
 @RunWith(SchemaRunner.class)
-public class OnetomanyMappedbyInvalidTest {
+public class JoincolumnOnetomanyTest {
 
     @Entity
     @Table(name = "CAR")
-    public static class Car {
+    static class Car {
         @ManyToOne
-        @JoinColumn(name = "FK")
-        String person;
+        Person person;
     }
 
     @Entity
     @Table(name = "PERSON")
-    public static class Person {
+    static class Person {
         @OneToMany(mappedBy = "person")
+        @JoinColumn(name = "FK", referencedColumnName = "PK")
         List<Car> cars;
     }
 
     @Test
-    @Script({ "create table PERSON ( PK int /*not null*/ primary key );",
+    @Script({ "create table PERSON ( PK int primary key );", //
             "create table CAR ( FK int references PERSON (PK) );" })
     public void test() {
+        runCheck(Person.class);
+    }
+
+    @Test
+    @Script({ "create table PERSON ( PK int primary key );", //
+            "create table CAR ( FK int );" })
+    public void test_fkInvalid() {
         try {
             runCheck(Person.class);
+            fail();
         } catch (ValidationException e) {
             assertEquals(1, e.getErrors().size());
+            assertContainsMessage(e, "FK");
         }
     }
 

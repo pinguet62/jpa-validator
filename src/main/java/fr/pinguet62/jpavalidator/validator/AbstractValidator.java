@@ -50,11 +50,10 @@ public abstract class AbstractValidator {
             throwError(message);
     }
 
-    // TODO abstract
     protected abstract boolean doProcess(Field field);
 
     /**
-     * {@link Annotation}s who are authorized but not yet supported.<br>
+     * Define {@link Annotation}s who are authorized but not yet supported.<br>
      * This method will be removed after full implementation of JPA annotations.
      */
     public Collection<Class<? extends Annotation>> getNotYetSupportedAnnotations() {
@@ -62,10 +61,14 @@ public abstract class AbstractValidator {
     }
 
     /**
-     * Authorized {@link Annotation}s for the current {@link Field}.<br>
-     * Only {@code javax.persistence.XXX} annotations are checked supported.
+     * Define authorized {@link Annotation}s for the {@link Field}.
+     * <p>
+     * Only {@code javax.persistence.XXX} annotations are checked supported.<br>
+     * Other annotations are not checked.
      */
-    public abstract Collection<Class<? extends Annotation>> getSupportedAnnotations();
+    public Collection<Class<? extends Annotation>> getSupportedAnnotations() {
+        return null;
+    }
 
     public boolean process(Field field) {
         return doProcess(field);

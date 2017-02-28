@@ -24,7 +24,7 @@ public class ManytomanyTest {
 
     @Entity
     @Table(name = "EMPLOYEE")
-    public static class Employee {
+    static class Employee {
         @ManyToMany
         @JoinTable(name = "LINK", joinColumns = { @JoinColumn(name = "EMPLOYEE_ID") }, inverseJoinColumns = {
                 @JoinColumn(name = "PROJECT_ID") })
@@ -33,28 +33,14 @@ public class ManytomanyTest {
 
     @Entity
     @Table(name = "PROJECT")
-    public static class MappedbyInvalidType {
-        @ManyToMany(mappedBy = "projects")
-        List<String> employees;
-    }
-
-    @Entity
-    @Table(name = "PROJECT")
-    public static class MappedbyUnknownProperty {
-        @ManyToMany(mappedBy = "unknown")
-        List<Employee> employees;
-    }
-
-    @Entity
-    @Table(name = "PROJECT")
-    public static class Project {
+    static class Project {
         @ManyToMany(mappedBy = "projects")
         List<Employee> employees;
     }
 
     @Test
-    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int /*not null*/ primary key );", //
-            "create table PROJECT ( ID_PROJECT int /*not null*/ primary key );", //
+    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int primary key );", //
+            "create table PROJECT ( ID_PROJECT int primary key );", //
             "create table LINK ( \n" + //
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
@@ -64,13 +50,13 @@ public class ManytomanyTest {
     }
 
     @Test
-    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int /*not null*/ primary key );", //
-            "create table PROJECT ( ID_PROJECT int /*not null*/ primary key );", //
+    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int primary key );", //
+            "create table PROJECT ( ID_PROJECT int primary key );", //
             "create table LINK ( \n" + //
-                    "    EMPLOYEE_ID int /*references EMPLOYEE (ID_EMPLOYEE)*/, \n" + //
+                    "    EMPLOYEE_ID int, \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
                     ");" })
-    public void test_JoinTable_noFk1() {
+    public void test_JoinTable_fk1Invalid() {
         try {
             runCheck(Employee.class);
             fail();
@@ -80,13 +66,13 @@ public class ManytomanyTest {
     }
 
     @Test
-    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int /*not null*/ primary key );", //
-            "create table PROJECT ( ID_PROJECT int /*not null*/ primary key );", //
+    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int primary key );", //
+            "create table PROJECT ( ID_PROJECT int primary key );", //
             "create table LINK ( \n" + //
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
-                    "    PROJECT_ID int /*references PROJECT (ID_PROJECT)*/ \n" + //
+                    "    PROJECT_ID int \n" + //
                     ");" })
-    public void test_JoinTable_noFk2() {
+    public void test_JoinTable_fk2Invalid() {
         try {
             runCheck(Employee.class);
             fail();
@@ -96,26 +82,33 @@ public class ManytomanyTest {
     }
 
     @Test
-    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int /*not null*/ primary key );", //
-            "create table PROJECT ( ID_PROJECT int /*not null*/ primary key );", //
+    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int primary key );", //
+            "create table PROJECT ( ID_PROJECT int primary key );", //
             "create table LINK ( \n" + //
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
                     ");" })
-    public void test_MappedBy() {
+    public void test_mappedBy() {
         runCheck(Project.class);
     }
 
     @Test
-    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int /*not null*/ primary key );", //
-            "create table PROJECT ( ID_PROJECT int /*not null*/ primary key );", //
+    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int primary key );", //
+            "create table PROJECT ( ID_PROJECT int primary key );", //
             "create table LINK ( \n" + //
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
                     ");" })
-    public void test_MappedBy_invalidType() {
+    public void test_mappedBy_propertyUnknown() {
+        @Entity
+        @Table(name = "PROJECT")
+        class UnknownMappedbyProperty {
+            @ManyToMany(mappedBy = "unknown")
+            List<Employee> employees;
+        }
+
         try {
-            runCheck(MappedbyInvalidType.class);
+            runCheck(UnknownMappedbyProperty.class);
             fail();
         } catch (ValidationException e) {
             assertEquals(1, e.getErrors().size());
@@ -123,15 +116,22 @@ public class ManytomanyTest {
     }
 
     @Test
-    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int /*not null*/ primary key );", //
-            "create table PROJECT ( ID_PROJECT int /*not null*/ primary key );", //
+    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int primary key );", //
+            "create table PROJECT ( ID_PROJECT int primary key );", //
             "create table LINK ( \n" + //
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
                     ");" })
-    public void test_MappedBy_unknownProperty() {
+    public void test_mappedBy_typeInvalid() {
+        @Entity
+        @Table(name = "PROJECT")
+        class InvalidMappedbyType {
+            @ManyToMany(mappedBy = "projects")
+            List<String> employees;
+        }
+
         try {
-            runCheck(MappedbyUnknownProperty.class);
+            runCheck(InvalidMappedbyType.class);
             fail();
         } catch (ValidationException e) {
             assertEquals(1, e.getErrors().size());

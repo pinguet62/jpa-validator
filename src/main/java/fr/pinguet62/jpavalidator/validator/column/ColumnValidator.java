@@ -29,10 +29,18 @@ public class ColumnValidator extends AbstractValidator {
         if (field.isAnnotationPresent(Id.class) && field.isAnnotationPresent(GeneratedValue.class))
             nullable = false; // because set to false for JPA
 
+        // Nullable: field type
+        if (nullable && field.getType().isPrimitive()) {
+            throwError("@" + Column.class.getSimpleName() + "(nullable=true) but field is primitve");
+            return false;
+        }
+
+        // Column & Nullable: database constraint
         if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, column.name(), nullable)) {
             throwError(format("column doesn't exists or has invalid nullable: %s.%s", tableName, column.name()));
             return false;
         }
+
         return true;
     }
 

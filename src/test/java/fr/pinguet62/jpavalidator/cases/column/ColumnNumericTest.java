@@ -3,6 +3,7 @@ package fr.pinguet62.jpavalidator.cases.column;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
 import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import javax.persistence.Column;
@@ -21,27 +22,46 @@ public class ColumnNumericTest {
 
     @Entity
     @Table(name = "SAMPLE")
-    public static class Sample {
+    static class Sample {
         @Column(name = "COL", precision = 5, scale = 2)
-        float field;
+        Float field;
+    }
+
+    @Test
+    @Script("create table SAMPLE ( COL numeric(5,2) );")
+    public void test() {
+        runCheck(Sample.class);
     }
 
     @Test
     @Script("create table SAMPLE ( COL numeric(99,42) );")
-    public void test_error() {
+    public void test_constraintInvalid() {
         try {
             runCheck(Sample.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertTrue(e.getErrors().size() >= 1);
             assertContainsMessage(e, "COL");
         }
     }
 
     @Test
     @Script("create table SAMPLE ( COL numeric(5,2) );")
-    public void test_ok() {
-        runCheck(Sample.class);
+    public void test_fieldTypeInvalid() {
+        @Entity
+        @Table(name = "SAMPLE")
+        class InvalidFieldType {
+            @Column(name = "COL", precision = 5, scale = 2)
+            Object field;
+        }
+
+        try {
+            runCheck(InvalidFieldType.class);
+            fail();
+        } catch (ValidationException e) {
+            assertEquals(1, e.getErrors().size());
+            assertContainsMessage(e, "COL");
+        }
     }
 
 }

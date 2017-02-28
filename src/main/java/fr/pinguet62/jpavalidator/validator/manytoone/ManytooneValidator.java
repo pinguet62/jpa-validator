@@ -28,7 +28,14 @@ public class ManytooneValidator extends AbstractValidator {
         Class<?> tgtEntity = field.getType();
         String tgtTableName = JpaUtils.getTableName(tgtEntity);
 
-        if (JdbcMetadataChecker.INSTANCE.checkForeignKey(tableName, srcColumnName, tgtTableName) == false) {
+        // Column & Nullable: database constraint
+        if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, srcColumnName, joinColumn.nullable())) {
+            throwError(format("column doesn't exists or has invalid nullable: %s.%s", tableName, srcColumnName));
+            return false;
+        }
+
+        // FK
+        if (!JdbcMetadataChecker.INSTANCE.checkForeignKey(tableName, srcColumnName, tgtTableName)) {
             throwError(format("no FK from %s.%s to %s", tableName, srcColumnName, tgtTableName));
             return false;
         }

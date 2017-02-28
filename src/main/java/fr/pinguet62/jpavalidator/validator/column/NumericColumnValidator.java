@@ -18,6 +18,8 @@ import fr.pinguet62.jpavalidator.validator.AbstractValidator;
 
 public class NumericColumnValidator extends AbstractValidator {
 
+    private static final Collection<Class<?>> NUMERIC_TYPES = asList(Float.class, Float.TYPE, BigDecimal.class);
+
     public NumericColumnValidator(Class<?> entity, String tableName) {
         super(entity, tableName);
     }
@@ -25,10 +27,20 @@ public class NumericColumnValidator extends AbstractValidator {
     @Override
     protected boolean doProcess(Field field) {
         Column column = field.getDeclaredAnnotation(Column.class);
-        if (!JdbcMetadataChecker.INSTANCE.checkNumeric(tableName, column.name(), column.precision(), column.scale())) {
-            throwError(format("column has invalid numeric precision/scale: %s.%s not null", tableName, column.name()));
+        String columnName = column.name();
+
+        // Field type
+        if (!NUMERIC_TYPES.contains(field.getType())) {
+            throwError(format("invalid field type: %s.%s", tableName, columnName));
             return false;
         }
+
+        // Database constraint
+        if (!JdbcMetadataChecker.INSTANCE.checkNumeric(tableName, columnName, column.precision(), column.scale())) {
+            throwError(format("column has invalid numeric precision/scale: %s.%s not null", tableName, columnName));
+            return false;
+        }
+
         return true;
     }
 
@@ -39,8 +51,19 @@ public class NumericColumnValidator extends AbstractValidator {
 
     @Override
     public boolean support(Field field) {
-        return field.isAnnotationPresent(Column.class)
-                && asList(Float.class, Float.TYPE, BigDecimal.class).contains(field.getType());
+        if (!field.isAnnotationPresent(Column.class))
+            return false;
+
+        // Field type require precision
+        if (NUMERIC_TYPES.contains(field.getType()))
+            return true;
+
+        // Precision declarated into @COlumn
+        Column column = field.getDeclaredAnnotation(Column.class);
+        if (column.precision() != 0 && column.scale() != 0)
+            return true;
+
+        return false;
     }
 
 }

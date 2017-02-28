@@ -21,37 +21,45 @@ public class ColumnNullableTest {
 
     @Entity
     @Table(name = "SAMPLE")
-    public static class Sample {
-        @Column(name = "MANDATORY", nullable = false)
-        Integer mandatory;
-
-        @Column(name = "OPTIONAL", nullable = true)
-        Integer optional;
+    static class Sample {
+        @Column(name = "COL", nullable = false)
+        Integer col;
     }
 
     @Test
-    @Script("create table SAMPLE ( \n" + //
-            "    MANDATORY int null, \n" + //
-            "    OPTIONAL int not null \n" + //
-            ");")
-    public void test_invalid() {
+    @Script("create table SAMPLE ( COL int not null );")
+    public void test() {
+        runCheck(Sample.class);
+    }
+
+    @Test
+    @Script("create table SAMPLE ( COL int null );")
+    public void test_fieldType_nonObject() {
+        @Entity
+        @Table(name = "SAMPLE")
+        class NonNullablePrimitiveFieldType {
+            @Column(name = "COL", nullable = true)
+            int col;
+        }
+
         try {
-            runCheck(Sample.class);
+            runCheck(NonNullablePrimitiveFieldType.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(2, e.getErrors().size());
-            assertContainsMessage(e, "MANDATORY");
-            assertContainsMessage(e, "OPTIONAL");
+            assertEquals(1, e.getErrors().size());
         }
     }
 
     @Test
-    @Script("create table SAMPLE ( \n" + //
-            "    MANDATORY int not null, \n" + //
-            "    OPTIONAL int null \n" + //
-            ");")
-    public void test_ok() {
-        runCheck(Sample.class);
+    @Script("create table SAMPLE ( COL int null );")
+    public void test_nullableInvalid() {
+        try {
+            runCheck(Sample.class);
+            fail();
+        } catch (ValidationException e) {
+            assertEquals(1, e.getErrors().size());
+            assertContainsMessage(e, "COL");
+        }
     }
 
 }

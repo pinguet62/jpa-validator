@@ -22,23 +22,15 @@ public class ManytooneTest {
 
     @Entity
     @Table(name = "CAR")
-    public static class Car {
+    static class Car {
         @ManyToOne
         @JoinColumn(name = "FK")
         Person person;
     }
 
     @Entity
-    @Table(name = "CAR")
-    public static class InvalidType {
-        @ManyToOne
-        @JoinColumn(name = "FK")
-        String person;
-    }
-
-    @Entity
     @Table(name = "PERSON")
-    public static class Person {}
+    static class Person {}
 
     @Test
     @Script({ "create table PERSON ( PK int primary key );", //
@@ -51,7 +43,7 @@ public class ManytooneTest {
     @Script({ "create table PERSON ( ID_PERSON character varying(99) primary key );", //
             "create table BAD ( ID_BAD character varying(99) primary key );", //
             "create table CAR ( FK character varying(99) references BAD (ID_BAD) );" })
-    public void test_invalidFk() {
+    public void test_fkInvalid() {
         try {
             runCheck(Car.class);
             fail();
@@ -64,7 +56,15 @@ public class ManytooneTest {
     @Test
     @Script({ "create table PERSON ( PK character varying(99) primary key );", //
             "create table CAR ( FK character varying(42) references PERSON (PK) );" })
-    public void test_invalidType() {
+    public void test_typeInvalid() {
+        @Entity
+        @Table(name = "CAR")
+        class InvalidType {
+            @ManyToOne
+            @JoinColumn(name = "FK")
+            String person;
+        }
+
         try {
             runCheck(InvalidType.class);
             fail();

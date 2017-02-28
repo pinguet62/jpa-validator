@@ -25,8 +25,10 @@ public class Processor implements Consumer<List<Class<?>>> {
                 for (Class<?> validatorClass : validators) {
                     AbstractValidator validator = buildValidator(validatorClass, entity);
                     validator.setOnError(message -> validation.getErrors().add(message));
-                    if (validator.support(field))
+                    if (validator.support(field)) {
+                        System.out.println(validator.getClass());
                         validator.validate(field);
+                    }
                 }
         if (!validation.getErrors().isEmpty())
             throw validation;

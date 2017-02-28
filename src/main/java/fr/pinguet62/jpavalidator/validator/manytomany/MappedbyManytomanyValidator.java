@@ -20,17 +20,21 @@ public class MappedbyManytomanyValidator extends AbstractValidator {
     @Override
     protected boolean doProcess(Field field) {
         ManyToMany manyToMany = field.getDeclaredAnnotation(ManyToMany.class);
+
+        // Target property: exists
         Class<?> tgtEntity = JpaUtils.getFirstArgumentType(field.getGenericType());
         Field mappedbyField = JpaUtils.getTargetField(tgtEntity, manyToMany.mappedBy());
         if (mappedbyField == null) {
             throwError("mappedBy target property not found");
             return false;
         }
-        // Target property of my type
+
+        // Target property: same type
         if (!JpaUtils.getFirstArgumentType(mappedbyField.getGenericType()).equals(entity)) {
             throwError("mappedBy target property is not of same type");
             return false;
         }
+
         return true;
     }
 

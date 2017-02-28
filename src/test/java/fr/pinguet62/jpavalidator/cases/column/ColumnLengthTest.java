@@ -21,14 +21,20 @@ public class ColumnLengthTest {
 
     @Entity
     @Table(name = "SAMPLE")
-    public static class Sample {
+    static class Sample {
         @Column(name = "COL", length = 42)
         String field;
     }
 
     @Test
+    @Script("create table SAMPLE ( COL varchar(42) );")
+    public void test() {
+        runCheck(Sample.class);
+    }
+
+    @Test
     @Script("create table SAMPLE ( COL varchar(99) );")
-    public void test_error() {
+    public void test_constraintInvalid() {
         try {
             runCheck(Sample.class);
             fail();
@@ -36,12 +42,6 @@ public class ColumnLengthTest {
             assertEquals(1, e.getErrors().size());
             assertContainsMessage(e, "COL");
         }
-    }
-
-    @Test
-    @Script("create table SAMPLE ( COL varchar(42) );")
-    public void test_ok() {
-        runCheck(Sample.class);
     }
 
 }

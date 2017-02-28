@@ -21,28 +21,14 @@ public class OnetooneTest {
 
     @Entity
     @Table(name = "ADDRESS")
-    public static class Address {
+    static class Address {
         @OneToOne(mappedBy = "address")
         Person person;
     }
 
     @Entity
-    @Table(name = "ADDRESS")
-    public static class MappedbyInvalidType {
-        @OneToOne(mappedBy = "address")
-        String person;
-    }
-
-    @Entity
-    @Table(name = "ADDRESS")
-    public static class MappedbyUnknownProperty {
-        @OneToOne(mappedBy = "unknown")
-        String person;
-    }
-
-    @Entity
     @Table(name = "PERSON")
-    public static class Person {
+    static class Person {
         @OneToOne
         @JoinColumn(name = "ADDRESS_ID")
         Address address;
@@ -62,9 +48,39 @@ public class OnetooneTest {
     @Script({ "create table ADDRESS ( ID_ADDRESS int primary key, );", //
             "create table PERSON ( \n" + //
                     "    ID_PERSON int primary key, \n" + //
-                    "    ADDRESS_ID int /*references ADDRESS (ID_ADDRESS)*/ \n" + //
+                    "    ADDRESS_ID int \n" + //
                     ");" })
-    public void test_joinColumn_noFk() {
+    public void test_joinColumn_fkInvalid() {
+        try {
+            runCheck(Person.class);
+            fail();
+        } catch (ValidationException e) {
+            assertEquals(1, e.getErrors().size());
+        }
+    }
+
+    @Test
+    @Script({ "create table ADDRESS ( ID_ADDRESS int primary key, );", //
+            "create table PERSON ( \n" + //
+                    "    ID_PERSON int primary key, \n" + //
+                    "    INVALID int references ADDRESS (ID_ADDRESS) \n" + //
+                    ");" })
+    public void test_joinColumn_nameInvalid() {
+        try {
+            runCheck(Person.class);
+            fail();
+        } catch (ValidationException e) {
+            assertEquals(1, e.getErrors().size());
+        }
+    }
+
+    @Test
+    @Script({ "create table ADDRESS ( ID_ADDRESS int primary key, );", //
+            "create table PERSON ( \n" + //
+                    "    ID_PERSON int primary key, \n" + //
+                    "    ADDRESS_ID int not null references ADDRESS (ID_ADDRESS) \n" + //
+                    ");" })
+    public void test_joinColumn_nullableInvalid() {
         try {
             runCheck(Person.class);
             fail();
@@ -89,9 +105,16 @@ public class OnetooneTest {
                     "    ID_PERSON int primary key, \n" + //
                     "    ADDRESS_ID int references ADDRESS (ID_ADDRESS) \n" + //
                     ");" })
-    public void test_mappedby_invalidType() {
+    public void test_mappedby_propertyUnknown() {
+        @Entity
+        @Table(name = "ADDRESS")
+        class UnknownMappedbyProperty {
+            @OneToOne(mappedBy = "unknown")
+            String person;
+        }
+
         try {
-            runCheck(MappedbyInvalidType.class);
+            runCheck(UnknownMappedbyProperty.class);
             fail();
         } catch (ValidationException e) {
             assertEquals(1, e.getErrors().size());
@@ -104,9 +127,16 @@ public class OnetooneTest {
                     "    ID_PERSON int primary key, \n" + //
                     "    ADDRESS_ID int references ADDRESS (ID_ADDRESS) \n" + //
                     ");" })
-    public void test_mappedby_unknownProperty() {
+    public void test_mappedby_typeInvalid() {
+        @Entity
+        @Table(name = "ADDRESS")
+        class InvalidMappedbyType {
+            @OneToOne(mappedBy = "address")
+            String person;
+        }
+
         try {
-            runCheck(MappedbyUnknownProperty.class);
+            runCheck(InvalidMappedbyType.class);
             fail();
         } catch (ValidationException e) {
             assertEquals(1, e.getErrors().size());
