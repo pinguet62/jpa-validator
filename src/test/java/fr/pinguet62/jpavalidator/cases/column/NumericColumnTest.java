@@ -18,7 +18,7 @@ import fr.pinguet62.jpavalidator.util.runner.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.runner.Script;
 
 @RunWith(SchemaRunner.class)
-public class ColumnNumericTest {
+public class NumericColumnTest {
 
     @Entity
     @Table(name = "SAMPLE")
@@ -35,7 +35,7 @@ public class ColumnNumericTest {
 
     @Test
     @Script("create table SAMPLE ( COL numeric(99,42) );")
-    public void test_constraintInvalid() {
+    public void test_constraint_invalid() {
         try {
             runCheck(Sample.class);
             fail();
@@ -47,7 +47,7 @@ public class ColumnNumericTest {
 
     @Test
     @Script("create table SAMPLE ( COL numeric(5,2) );")
-    public void test_fieldTypeInvalid() {
+    public void test_property_type_invalid() {
         @Entity
         @Table(name = "SAMPLE")
         class InvalidFieldType {

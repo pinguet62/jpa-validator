@@ -17,7 +17,7 @@ import fr.pinguet62.jpavalidator.util.runner.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.runner.Script;
 
 @RunWith(SchemaRunner.class)
-public class ColumnLengthTest {
+public class LengthColumnTest {
 
     @Entity
     @Table(name = "SAMPLE")
@@ -34,7 +34,7 @@ public class ColumnLengthTest {
 
     @Test
     @Script("create table SAMPLE ( COL varchar(99) );")
-    public void test_constraintInvalid() {
+    public void test_constraint_invalid() {
         try {
             runCheck(Sample.class);
             fail();

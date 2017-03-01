@@ -43,7 +43,7 @@ public class ManytooneTest {
     @Script({ "create table PERSON ( ID_PERSON character varying(99) primary key );", //
             "create table BAD ( ID_BAD character varying(99) primary key );", //
             "create table CAR ( FK character varying(99) references BAD (ID_BAD) );" })
-    public void test_fkInvalid() {
+    public void test_fk_invalid() {
         try {
             runCheck(Car.class);
             fail();
@@ -56,7 +56,7 @@ public class ManytooneTest {
     @Test
     @Script({ "create table PERSON ( PK character varying(99) primary key );", //
             "create table CAR ( FK character varying(42) references PERSON (PK) );" })
-    public void test_typeInvalid() {
+    public void test_propertyType_invalid() {
         @Entity
         @Table(name = "CAR")
         class InvalidType {

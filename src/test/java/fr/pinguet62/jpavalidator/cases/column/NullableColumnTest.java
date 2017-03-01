@@ -17,7 +17,7 @@ import fr.pinguet62.jpavalidator.util.runner.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.runner.Script;
 
 @RunWith(SchemaRunner.class)
-public class ColumnNullableTest {
+public class NullableColumnTest {
 
     @Entity
     @Table(name = "SAMPLE")
@@ -52,7 +52,7 @@ public class ColumnNullableTest {
 
     @Test
     @Script("create table SAMPLE ( COL int null );")
-    public void test_nullableInvalid() {
+    public void test_nullable_invalid() {
         try {
             runCheck(Sample.class);
             fail();

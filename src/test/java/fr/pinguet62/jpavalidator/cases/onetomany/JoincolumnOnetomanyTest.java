@@ -48,7 +48,7 @@ public class JoincolumnOnetomanyTest {
     @Test
     @Script({ "create table PERSON ( PK int primary key );", //
             "create table CAR ( FK int );" })
-    public void test_fkInvalid() {
+    public void test_fk_invalid() {
         try {
             runCheck(Person.class);
             fail();

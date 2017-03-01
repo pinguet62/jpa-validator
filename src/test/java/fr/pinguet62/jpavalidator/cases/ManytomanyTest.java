@@ -56,7 +56,7 @@ public class ManytomanyTest {
                     "    EMPLOYEE_ID int, \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
                     ");" })
-    public void test_JoinTable_fk1Invalid() {
+    public void test_JoinTable_fk1_invalid() {
         try {
             runCheck(Employee.class);
             fail();
@@ -72,7 +72,7 @@ public class ManytomanyTest {
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
                     "    PROJECT_ID int \n" + //
                     ");" })
-    public void test_JoinTable_fk2Invalid() {
+    public void test_JoinTable_fk2_invalid() {
         try {
             runCheck(Employee.class);
             fail();
@@ -99,16 +99,16 @@ public class ManytomanyTest {
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
                     ");" })
-    public void test_mappedBy_propertyUnknown() {
+    public void test_mappedBy_propertyType_invalid() {
         @Entity
         @Table(name = "PROJECT")
-        class UnknownMappedbyProperty {
-            @ManyToMany(mappedBy = "unknown")
-            List<Employee> employees;
+        class InvalidMappedbyType {
+            @ManyToMany(mappedBy = "projects")
+            List<String> employees;
         }
 
         try {
-            runCheck(UnknownMappedbyProperty.class);
+            runCheck(InvalidMappedbyType.class);
             fail();
         } catch (ValidationException e) {
             assertEquals(1, e.getErrors().size());
@@ -122,16 +122,16 @@ public class ManytomanyTest {
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
                     ");" })
-    public void test_mappedBy_typeInvalid() {
+    public void test_mappedBy_propertyUnknown() {
         @Entity
         @Table(name = "PROJECT")
-        class InvalidMappedbyType {
-            @ManyToMany(mappedBy = "projects")
-            List<String> employees;
+        class UnknownMappedbyProperty {
+            @ManyToMany(mappedBy = "unknown")
+            List<Employee> employees;
         }
 
         try {
-            runCheck(InvalidMappedbyType.class);
+            runCheck(UnknownMappedbyProperty.class);
             fail();
         } catch (ValidationException e) {
             assertEquals(1, e.getErrors().size());

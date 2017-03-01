@@ -48,27 +48,7 @@ public class OnetomanyTest {
     @Test
     @Script({ "create table PERSON ( PK int primary key );", //
             "create table CAR ( FK int references PERSON (PK) );" })
-    public void test_mappedby_propertyUnknown() {
-        @Entity
-        @Table(name = "PERSON")
-        class UnknownMappedbyProperty {
-            @OneToMany(mappedBy = "person")
-            List<Car> cars;
-        }
-
-        try {
-            runCheck(UnknownMappedbyProperty.class);
-            fail();
-        } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
-            assertContainsMessage(e, "cars");
-        }
-    }
-
-    @Test
-    @Script({ "create table PERSON ( PK int primary key );", //
-            "create table CAR ( FK int references PERSON (PK) );" })
-    public void test_mappedby_typeInvalid() {
+    public void test_mappedby_property_type_invalid() {
         @Entity
         @Table(name = "CAR")
         class InvalidMappedbyTypeCar {
@@ -95,7 +75,27 @@ public class OnetomanyTest {
     @Test
     @Script({ "create table PERSON ( PK int primary key );", //
             "create table CAR ( FK int references PERSON (PK) );" })
-    public void test_typeInvalid() {
+    public void test_mappedby_property_unknown() {
+        @Entity
+        @Table(name = "PERSON")
+        class UnknownMappedbyProperty {
+            @OneToMany(mappedBy = "person")
+            List<Car> cars;
+        }
+
+        try {
+            runCheck(UnknownMappedbyProperty.class);
+            fail();
+        } catch (ValidationException e) {
+            assertEquals(1, e.getErrors().size());
+            assertContainsMessage(e, "cars");
+        }
+    }
+
+    @Test
+    @Script({ "create table PERSON ( PK int primary key );", //
+            "create table CAR ( FK int references PERSON (PK) );" })
+    public void test_property_type_invalid() {
         @Entity
         @Table(name = "PERSON")
         class InvalidType {
