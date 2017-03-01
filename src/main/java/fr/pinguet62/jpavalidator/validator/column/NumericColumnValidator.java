@@ -58,7 +58,7 @@ public class NumericColumnValidator extends AbstractValidator {
         if (NUMERIC_TYPES.contains(field.getType()))
             return true;
 
-        // Precision declarated into @COlumn
+        // Precision declarated into @Column
         Column column = field.getDeclaredAnnotation(Column.class);
         if (column.precision() != 0 && column.scale() != 0)
             return true;

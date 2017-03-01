@@ -5,6 +5,7 @@
 The visitor class: `Checker`
 ```java
 Checker checker = new JdbcMetadataChecker("jdbc:postgresql://HOST:PORT/DATABASE?user=USERNAME&password=PASSWORD&currentSchema=SCHEMA");
+JdbcMetadataChecker.INSTANCE = checker;
 ```
 
 The `@Entity` classes: `List<Class<?>>`.  
@@ -15,7 +16,7 @@ List<Class<?>> entities = JpaUtils.getEntities("foo.bar.pack");
 
 Run check:
 ```java
-new Processor(checker).accept(entities);
+new Processor().accept(entities);
 ```
 
 ## VS Hibernate

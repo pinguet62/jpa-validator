@@ -82,10 +82,7 @@ public abstract class JdbcMetadataChecker {
         }
     }
 
-    /**
-     * @param columnName {@link Column#name()}
-     * @param nullable {@link Column#nullable()}
-     */
+    /** @param nullable {@link Column#nullable()} */
     public boolean checkColumn(String tableName, String columnName, boolean nullable) {
         try {
             ResultSet resultSet = metadata.getColumns(catalog, schema, tableName, columnName);
@@ -94,6 +91,16 @@ public abstract class JdbcMetadataChecker {
             if (resultSet.getInt("NULLABLE") == columnNullableUnknown)
                 throw new RuntimeException("???");
             return resultSet.getInt("NULLABLE") == (nullable ? columnNullable : columnNoNulls);
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
+    }
+
+    /** @param columnName {@link Column#name()} */
+    public boolean checkColumnExists(String tableName, String columnName) {
+        try {
+            ResultSet resultSet = metadata.getColumns(catalog, schema, tableName, columnName);
+            return resultSet.next();
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
