@@ -21,7 +21,7 @@ public class CharacterColumnValidator extends AbstractColumnValidator {
         if (!JdbcMetadataChecker.INSTANCE.checkCharacter(tableName, columnName, column.length()))
             throw new ColumnException(tableName, columnName, "invalid character length");
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

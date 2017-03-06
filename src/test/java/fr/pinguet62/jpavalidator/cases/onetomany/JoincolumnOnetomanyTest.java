@@ -1,8 +1,7 @@
 package fr.pinguet62.jpavalidator.cases.onetomany;
 
+import static fr.pinguet62.jpavalidator.util.TestUtils.assertErrorWithColumn;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
-import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.util.List;
@@ -53,8 +52,7 @@ public class JoincolumnOnetomanyTest {
             runCheck(Person.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
-            assertContainsMessage(e, "FK");
+            assertErrorWithColumn(e, Person.class, "SAMPLE", "PK");
         }
     }
 

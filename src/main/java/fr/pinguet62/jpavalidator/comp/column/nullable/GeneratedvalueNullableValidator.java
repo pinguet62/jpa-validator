@@ -25,7 +25,7 @@ public class GeneratedvalueNullableValidator extends AbstractColumnValidator {
             throw new ColumnException(tableName, columnName, "using @" + GeneratedValue.class.getSimpleName() + " the @"
                     + Column.class.getSimpleName() + "(nullable) must be true");
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

@@ -1,8 +1,7 @@
 package fr.pinguet62.jpavalidator.cases;
 
+import static fr.pinguet62.jpavalidator.util.TestUtils.assertErrorWithColumn;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
-import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import javax.persistence.Entity;
@@ -48,8 +47,7 @@ public class ManytooneTest {
             runCheck(Car.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
-            assertContainsMessage(e, "FK");
+            assertErrorWithColumn(e, Car.class, "CAR", "FK");
         }
     }
 
@@ -69,8 +67,7 @@ public class ManytooneTest {
             runCheck(InvalidType.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
-            assertContainsMessage(e, "FK");
+            assertErrorWithColumn(e, InvalidType.class, "person");
         }
     }
 

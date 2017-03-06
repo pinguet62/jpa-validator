@@ -5,7 +5,7 @@ import java.lang.reflect.Field;
 import javax.persistence.ManyToMany;
 
 import fr.pinguet62.jpavalidator.JpaUtils;
-import fr.pinguet62.jpavalidator.comp.VException;
+import fr.pinguet62.jpavalidator.comp.MappedbyException;
 
 public class MappedbyManytomanyValidator extends AbstractManytomanyValidator {
 
@@ -15,27 +15,30 @@ public class MappedbyManytomanyValidator extends AbstractManytomanyValidator {
 
     @Override
     protected void process(Field field) {
+        String mappedBy = manyToMany.mappedBy();
+
         // Target property: exists
         Class<?> tgtEntity = JpaUtils.getFirstArgumentType(field.getGenericType());
-        Field mappedbyField = JpaUtils.getTargetField(tgtEntity, manyToMany.mappedBy());
+        Field mappedbyField = JpaUtils.getTargetField(tgtEntity, mappedBy);
         if (mappedbyField == null)
-            throw new VException("mappedBy target property not found");
+            throw new MappedbyException(mappedBy, "mappedBy target property not found");
 
         // Target property: same type
         if (!JpaUtils.getFirstArgumentType(mappedbyField.getGenericType()).equals(field.getDeclaringClass()))
-            throw new VException("mappedBy target property is not of same type");
+            throw new MappedbyException(mappedBy, "mappedBy target property is not of same type");
 
         // Will be processed by direct validator
         // - use @ManyToMany
         ManyToMany mappedOnetomany = mappedbyField.getDeclaredAnnotation(ManyToMany.class);
         if (mappedOnetomany == null)
-            throw new VException("mappedBy target property is not annotated with @" + ManyToMany.class.getSimpleName());
+            throw new MappedbyException(mappedBy,
+                    "mappedBy target property is not annotated with @" + ManyToMany.class.getSimpleName());
         // - doesn't use "mappedBy"
         if (!mappedOnetomany.mappedBy().equals(""))
-            throw new VException(
+            throw new MappedbyException(mappedBy,
                     "mappedBy target property cannot use @" + ManyToMany.class.getSimpleName() + "(mappedBy) either");
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

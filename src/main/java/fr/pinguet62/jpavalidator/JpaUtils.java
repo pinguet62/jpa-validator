@@ -31,6 +31,10 @@ public class JpaUtils {
         List<Field> fields = new ArrayList<>();
 
         for (Field field : entity.getDeclaredFields()) {
+            // TODO tmp fix for unit-test inline class
+            if (field.toString().matches(".*\\.this\\$[0-9]+$"))
+                continue;
+
             if (field.isAnnotationPresent(Transient.class))
                 continue;
 

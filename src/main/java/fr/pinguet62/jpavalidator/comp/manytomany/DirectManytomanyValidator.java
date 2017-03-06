@@ -44,7 +44,7 @@ public class DirectManytomanyValidator extends AbstractManytomanyValidator {
                 throw new ColumnException(linkTableName, joinColumn.name(), "no FK to " + targetTableName);
         }
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

@@ -1,8 +1,7 @@
 package fr.pinguet62.jpavalidator.cases.id;
 
+import static fr.pinguet62.jpavalidator.util.TestUtils.assertErrorWithColumn;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
-import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import javax.persistence.Column;
@@ -41,9 +40,7 @@ public class IdTest {
             runCheck(Sample.class);
             fail();
         } catch (ValidationException e) {
-            assertTrue(e.getErrors().size() >= 1);
-            assertContainsMessage(e, "id");
-            assertContainsMessage(e, "PK");
+            assertErrorWithColumn(e, Sample.class, "SAMPLE", "PK");
         }
     }
 
@@ -54,8 +51,7 @@ public class IdTest {
             runCheck(Sample.class);
             fail();
         } catch (ValidationException e) {
-            assertTrue(e.getErrors().size() >= 1);
-            assertContainsMessage(e, "id");
+            assertErrorWithColumn(e, Sample.class, "SAMPLE", "PK");
         }
     }
 
@@ -67,8 +63,7 @@ public class IdTest {
             runCheck(Sample.class);
             fail();
         } catch (ValidationException e) {
-            assertTrue(e.getErrors().size() >= 1);
-            assertContainsMessage(e, "id");
+            assertErrorWithColumn(e, Sample.class, "SAMPLE", "PK");
         }
     }
 

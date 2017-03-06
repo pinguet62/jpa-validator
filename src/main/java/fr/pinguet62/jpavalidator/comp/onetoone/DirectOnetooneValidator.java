@@ -35,7 +35,7 @@ public class DirectOnetooneValidator extends AbstractOnetooneValidator {
         if (JdbcMetadataChecker.INSTANCE.checkForeignKey(tableName, srcColumnName, tgtTableName) == false)
             throw new ColumnException(tableName, srcColumnName, "no FK to " + tgtTableName);
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

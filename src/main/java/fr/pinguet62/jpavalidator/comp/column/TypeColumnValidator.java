@@ -46,7 +46,7 @@ public class TypeColumnValidator extends AbstractColumnValidator {
         String expectedDatabaseType = javaToDb.get(propertyType);
         System.err.println("TODO: check " + propertyType.getSimpleName() + "/" + expectedDatabaseType);
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

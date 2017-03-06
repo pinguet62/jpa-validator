@@ -12,7 +12,7 @@ import fr.pinguet62.jpavalidator.comp.Validator;
 
 public class ManytooneValidator extends Validator {
 
-    protected ManytooneValidator(String tableName) {
+    public ManytooneValidator(String tableName) {
         super(tableName);
     }
 
@@ -32,7 +32,7 @@ public class ManytooneValidator extends Validator {
         if (!JdbcMetadataChecker.INSTANCE.checkForeignKey(tableName, srcColumnName, tgtTableName))
             throw new ColumnException(tableName, srcColumnName, "no FK from to " + tgtTableName);
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

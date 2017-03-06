@@ -27,7 +27,7 @@ public class NumericColumnValidator extends AbstractColumnValidator {
         if (!JdbcMetadataChecker.INSTANCE.checkNumeric(tableName, columnName, column.precision(), column.scale()))
             throw new ColumnException(tableName, columnName, "invalid numeric precision/scale");
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

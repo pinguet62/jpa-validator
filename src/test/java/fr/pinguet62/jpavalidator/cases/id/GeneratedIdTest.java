@@ -1,9 +1,9 @@
 package fr.pinguet62.jpavalidator.cases.id;
 
+import static fr.pinguet62.jpavalidator.util.TestUtils.assertErrorWithColumn;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
 import static javax.persistence.GenerationType.IDENTITY;
 import static javax.persistence.GenerationType.SEQUENCE;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import javax.persistence.Column;
@@ -36,7 +36,7 @@ public class GeneratedIdTest {
             runCheck(IdentityNotNullable.class);
             fail();
         } catch (ValidationException e) {
-            assertTrue(e.getErrors().size() >= 1);
+            assertErrorWithColumn(e, IdentityNotNullable.class, "SAMPLE", "PK");
         }
     }
 
@@ -58,7 +58,7 @@ public class GeneratedIdTest {
             runCheck(SequenceNotNullable.class);
             fail();
         } catch (ValidationException e) {
-            assertTrue(e.getErrors().size() >= 1);
+            assertErrorWithColumn(e, SequenceNotNullable.class, "SAMPLE", "PK");
         }
     }
 

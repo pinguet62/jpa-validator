@@ -1,7 +1,7 @@
 package fr.pinguet62.jpavalidator.cases;
 
+import static fr.pinguet62.jpavalidator.util.TestUtils.assertErrorWithColumn;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.util.List;
@@ -61,7 +61,7 @@ public class ManytomanyTest {
             runCheck(Employee.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, Employee.class, "LINK", "EMPLOYEE_ID");
         }
     }
 
@@ -77,7 +77,7 @@ public class ManytomanyTest {
             runCheck(Employee.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, Employee.class, "LINK", "PROJECT_ID");
         }
     }
 
@@ -111,7 +111,8 @@ public class ManytomanyTest {
             runCheck(InvalidMappedbyType.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, InvalidMappedbyType.class, "mappedBy");
+            assertErrorWithColumn(e, InvalidMappedbyType.class, "projects");
         }
     }
 
@@ -134,7 +135,7 @@ public class ManytomanyTest {
             runCheck(UnknownMappedbyProperty.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, UnknownMappedbyProperty.class, "unknown");
         }
     }
 

@@ -28,7 +28,7 @@ public class DefaultIdValidator extends Validator {
         if (JdbcMetadataChecker.INSTANCE.checkAutoIncrement(tableName, columnName, true))
             throw new ColumnException(tableName, columnName, "column is 'auto-increment'");
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

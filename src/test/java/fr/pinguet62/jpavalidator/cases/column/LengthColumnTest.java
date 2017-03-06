@@ -1,8 +1,7 @@
 package fr.pinguet62.jpavalidator.cases.column;
 
+import static fr.pinguet62.jpavalidator.util.TestUtils.assertErrorWithColumn;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
-import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import javax.persistence.Column;
@@ -39,8 +38,7 @@ public class LengthColumnTest {
             runCheck(Sample.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
-            assertContainsMessage(e, "COL");
+            assertErrorWithColumn(e, Sample.class, "SAMPLE", "COL");
         }
     }
 

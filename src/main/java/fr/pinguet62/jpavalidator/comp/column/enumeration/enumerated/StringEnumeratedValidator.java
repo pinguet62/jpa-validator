@@ -30,7 +30,7 @@ public class StringEnumeratedValidator extends Validator {
             throw new ColumnException(tableName, columnName,
                     "@" + Enumerated.class.getSimpleName() + "(" + enumType.name() + ") require " + dbType + " database type");
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

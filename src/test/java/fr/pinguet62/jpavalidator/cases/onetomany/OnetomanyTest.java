@@ -1,8 +1,7 @@
 package fr.pinguet62.jpavalidator.cases.onetomany;
 
+import static fr.pinguet62.jpavalidator.util.TestUtils.assertErrorWithColumn;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
-import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.util.List;
@@ -68,7 +67,7 @@ public class OnetomanyTest {
             runCheck(InvalidMappedbyTypePerson.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, InvalidMappedbyTypePerson.class, "SAMPLE", "cars");
         }
     }
 
@@ -87,8 +86,7 @@ public class OnetomanyTest {
             runCheck(UnknownMappedbyProperty.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
-            assertContainsMessage(e, "cars");
+            assertErrorWithColumn(e, UnknownMappedbyProperty.class, "SAMPLE", "cars");
         }
     }
 
@@ -107,8 +105,7 @@ public class OnetomanyTest {
             runCheck(InvalidType.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
-            assertContainsMessage(e, "cars");
+            assertErrorWithColumn(e, InvalidType.class, "SAMPLE", "cars");
         }
     }
 

@@ -22,13 +22,12 @@ public abstract class Validator {
     public void processNext(Field field) {
         Validator next = null;
         for (Validator validator : getAvailableNextValidators())
-            if (validator.support(field)) {
-                if (next != null)
-                    throw new RuntimeException("Only 1 can be called");
+            if (validator.support(field))
+                // TODO Strategy
+                // if (next != null) throw new RuntimeException("Only 1 can be called");
                 next = validator;
-            }
         if (next == null)
-            throw new RuntimeException("Not found");
+            throw new RuntimeException("Not found: " + getClass());
         next.process(field);
     }
 

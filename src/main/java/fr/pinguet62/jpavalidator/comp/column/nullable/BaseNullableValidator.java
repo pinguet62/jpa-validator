@@ -11,7 +11,6 @@ import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
 import fr.pinguet62.jpavalidator.comp.ColumnException;
 import fr.pinguet62.jpavalidator.comp.Validator;
 import fr.pinguet62.jpavalidator.comp.column.AbstractColumnValidator;
-import fr.pinguet62.jpavalidator.comp.column.NumericColumnValidator;
 
 public class BaseNullableValidator extends AbstractColumnValidator {
 
@@ -21,7 +20,7 @@ public class BaseNullableValidator extends AbstractColumnValidator {
 
     @Override
     protected List<Validator> getAvailableNextValidators() {
-        return asList(new GeneratedvalueNullableValidator(tableName, column), new NumericColumnValidator(tableName, column));
+        return asList(new GeneratedvalueNullableValidator(tableName, column), new NullableValidator(tableName, column));
     }
 
     @Override

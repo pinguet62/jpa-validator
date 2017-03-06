@@ -1,7 +1,7 @@
 package fr.pinguet62.jpavalidator.cases;
 
+import static fr.pinguet62.jpavalidator.util.TestUtils.assertErrorWithColumn;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import javax.persistence.Entity;
@@ -55,7 +55,7 @@ public class OnetooneTest {
             runCheck(Person.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, Person.class, "PERSON", "ADDRESS_ID");
         }
     }
 
@@ -70,7 +70,7 @@ public class OnetooneTest {
             runCheck(Person.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, Person.class, "PERSON", "ADDRESS_ID");
         }
     }
 
@@ -85,7 +85,7 @@ public class OnetooneTest {
             runCheck(Person.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, Person.class, "PERSON", "ADDRESS_ID");
         }
     }
 
@@ -117,7 +117,8 @@ public class OnetooneTest {
             runCheck(InvalidMappedbyType.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, InvalidMappedbyType.class, "mappedBy");
+            assertErrorWithColumn(e, InvalidMappedbyType.class, "address");
         }
     }
 
@@ -139,7 +140,7 @@ public class OnetooneTest {
             runCheck(UnknownMappedbyProperty.class);
             fail();
         } catch (ValidationException e) {
-            assertEquals(1, e.getErrors().size());
+            assertErrorWithColumn(e, UnknownMappedbyProperty.class, "unknown");
         }
     }
 

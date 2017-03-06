@@ -48,7 +48,7 @@ public class SequenceGeneratedIdValidator extends AbstractGeneratedvalueValidato
         if (!JdbcMetadataChecker.INSTANCE.checkAutoIncrementByIdentity(tableName, columnName))
             throw new ColumnException(tableName, columnName, "is not 'generated as identity' by sequenceName");
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override

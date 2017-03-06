@@ -1,9 +1,8 @@
 package fr.pinguet62.jpavalidator.cases.id;
 
+import static fr.pinguet62.jpavalidator.util.TestUtils.assertErrorWithColumn;
 import static fr.pinguet62.jpavalidator.util.TestUtils.runCheck;
-import static fr.pinguet62.jpavalidator.util.ValidationExceptionAssertions.assertContainsMessage;
 import static javax.persistence.GenerationType.SEQUENCE;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import javax.persistence.Column;
@@ -48,8 +47,7 @@ public class SequenceGeneratedIdTest {
             runCheck(Sample.class);
             fail();
         } catch (ValidationException e) {
-            assertTrue(e.getErrors().size() >= 1);
-            assertContainsMessage(e, "PK");
+            assertErrorWithColumn(e, Sample.class, "SAMPLE", "PK");
         }
     }
 
@@ -61,7 +59,7 @@ public class SequenceGeneratedIdTest {
             runCheck(Sample.class);
             fail();
         } catch (ValidationException e) {
-            assertTrue(e.getErrors().size() >= 1);
+            assertErrorWithColumn(e, Sample.class, "SAMPLE", "PK");
         }
     }
 
@@ -83,7 +81,7 @@ public class SequenceGeneratedIdTest {
             runCheck(BadGeneratorName.class);
             fail();
         } catch (ValidationException e) {
-            assertTrue(e.getErrors().size() >= 1);
+            assertErrorWithColumn(e, Sample.class, "invalid");
         }
     }
 

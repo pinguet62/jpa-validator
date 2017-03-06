@@ -24,7 +24,7 @@ public class NullableValidator extends AbstractColumnValidator {
         if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, columnName, nullable))
             throw new ColumnException(tableName, columnName, "invalid nullable constraint");
 
-        processNext(field);
+        // TODO processNext(field);
     }
 
     @Override
