@@ -51,7 +51,7 @@ public class TypeColumnValidator extends AbstractColumnValidator {
 
     @Override
     protected boolean support(Field field) {
-        return field.getType().equals(String.class);
+        return true;
     }
 
 }

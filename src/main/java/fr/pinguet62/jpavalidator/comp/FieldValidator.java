@@ -7,6 +7,7 @@ import java.util.List;
 
 import fr.pinguet62.jpavalidator.comp.column.BaseColumnValidator;
 import fr.pinguet62.jpavalidator.comp.id.BaseIdValidator;
+import fr.pinguet62.jpavalidator.comp.onetoone.BaseOnetooneValidator;
 
 public class FieldValidator extends Validator {
 
@@ -16,7 +17,7 @@ public class FieldValidator extends Validator {
 
     @Override
     protected List<Validator> getAvailableNextValidators() {
-        return asList(new BaseColumnValidator(tableName), new BaseIdValidator(tableName));
+        return asList(new BaseColumnValidator(tableName), new BaseIdValidator(tableName), new BaseOnetooneValidator(tableName));
     }
 
     @Override

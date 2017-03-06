@@ -6,7 +6,6 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
 
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
 import fr.pinguet62.jpavalidator.comp.ColumnException;
@@ -39,7 +38,7 @@ public class BaseNullableValidator extends AbstractColumnValidator {
 
     @Override
     protected boolean support(Field field) {
-        return !field.isAnnotationPresent(GeneratedValue.class);
+        return true;
     }
 
 }

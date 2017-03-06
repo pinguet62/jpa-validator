@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.comp.id;
+package fr.pinguet62.jpavalidator.comp.id.generatedvalue;
 
 import static javax.persistence.GenerationType.SEQUENCE;
 
@@ -11,12 +11,11 @@ import javax.persistence.SequenceGenerator;
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
 import fr.pinguet62.jpavalidator.comp.ColumnException;
 import fr.pinguet62.jpavalidator.comp.VException;
-import fr.pinguet62.jpavalidator.comp.Validator;
 
-public class SequenceGeneratedIdValidator extends Validator {
+public class SequenceGeneratedIdValidator extends AbstractGeneratedvalueValidator {
 
-    public SequenceGeneratedIdValidator(String tableName) {
-        super(tableName);
+    public SequenceGeneratedIdValidator(String tableName, GeneratedValue generatedValue) {
+        super(tableName, generatedValue);
     }
 
     @Override
@@ -28,7 +27,7 @@ public class SequenceGeneratedIdValidator extends Validator {
         if (!JdbcMetadataChecker.INSTANCE.checkAutoIncrement(tableName, columnName, true))
             throw new ColumnException(tableName, columnName, "is not 'auto-increment'");
 
-        String generator = field.getDeclaredAnnotation(GeneratedValue.class).generator();
+        String generator = generatedValue.generator();
         SequenceGenerator sequenceGenerator = field.getDeclaredAnnotation(SequenceGenerator.class);
         String sequenceGeneratorName = sequenceGenerator.name();
         // Generator: same key
@@ -54,9 +53,7 @@ public class SequenceGeneratedIdValidator extends Validator {
 
     @Override
     protected boolean support(Field field) {
-        return field.isAnnotationPresent(GeneratedValue.class)
-                && field.getDeclaredAnnotation(GeneratedValue.class).strategy().equals(SEQUENCE)
-                && field.isAnnotationPresent(SequenceGenerator.class);
+        return field.getDeclaredAnnotation(GeneratedValue.class).strategy().equals(SEQUENCE);
     }
 
 }

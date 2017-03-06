@@ -12,6 +12,7 @@ public abstract class Validator {
         this.tableName = tableName;
     }
 
+    /** The values must be <b>ordered</b> because are evaluated in order. */
     protected List<Validator> getAvailableNextValidators() {
         return new ArrayList<>();
     }

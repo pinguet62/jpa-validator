@@ -21,6 +21,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import fr.pinguet62.jpavalidator.NotYetImplemented;
 import fr.pinguet62.jpavalidator.SQLRuntimeException;
 
 /**
@@ -186,6 +187,10 @@ public abstract class JdbcMetadataChecker {
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
+    }
+
+    public boolean checkType(String tableName, String columnName, String type) {
+        throw new NotYetImplemented();
     }
 
     private String convertBoolean(boolean value) {

@@ -1,18 +1,19 @@
-package fr.pinguet62.jpavalidator.comp.id;
+package fr.pinguet62.jpavalidator.comp.id.generatedvalue;
+
+import static javax.persistence.GenerationType.IDENTITY;
 
 import java.lang.reflect.Field;
 
 import javax.persistence.Column;
-import javax.persistence.Id;
+import javax.persistence.GeneratedValue;
 
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
 import fr.pinguet62.jpavalidator.comp.ColumnException;
-import fr.pinguet62.jpavalidator.comp.Validator;
 
-public class IdentityGeneratedIdValidator extends Validator {
+public class IdentityGeneratedIdValidator extends AbstractGeneratedvalueValidator {
 
-    public IdentityGeneratedIdValidator(String tableName) {
-        super(tableName);
+    public IdentityGeneratedIdValidator(String tableName, GeneratedValue generatedValue) {
+        super(tableName, generatedValue);
     }
 
     @Override
@@ -35,7 +36,7 @@ public class IdentityGeneratedIdValidator extends Validator {
 
     @Override
     protected boolean support(Field field) {
-        return field.isAnnotationPresent(Id.class);
+        return field.getDeclaredAnnotation(GeneratedValue.class).strategy().equals(IDENTITY);
     }
 
 }

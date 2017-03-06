@@ -1,27 +1,18 @@
 package fr.pinguet62.jpavalidator.comp.id;
 
-import static java.util.Arrays.asList;
-
 import java.lang.reflect.Field;
-import java.util.List;
 
 import javax.persistence.Column;
-import javax.persistence.Id;
+import javax.persistence.GeneratedValue;
 
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
 import fr.pinguet62.jpavalidator.comp.ColumnException;
 import fr.pinguet62.jpavalidator.comp.Validator;
-import fr.pinguet62.jpavalidator.comp.id.generatedvalue.BaseGeneratedvalueValidator;
 
-public class BaseIdValidator extends Validator {
+public class DefaultIdValidator extends Validator {
 
-    public BaseIdValidator(String tableName) {
+    public DefaultIdValidator(String tableName) {
         super(tableName);
-    }
-
-    @Override
-    protected List<Validator> getAvailableNextValidators() {
-        return asList(new DefaultIdValidator(tableName), new BaseGeneratedvalueValidator(tableName));
     }
 
     @Override
@@ -29,15 +20,20 @@ public class BaseIdValidator extends Validator {
         Column column = field.getDeclaredAnnotation(Column.class);
         String columnName = column.name();
 
+        // PK
         if (!JdbcMetadataChecker.INSTANCE.checkPrimaryKey(tableName, columnName))
-            throw new ColumnException(tableName, columnName, "column is not a PK");
+            throw new ColumnException(tableName, columnName, "column is not an PK");
+
+        // Not auto-increment
+        if (JdbcMetadataChecker.INSTANCE.checkAutoIncrement(tableName, columnName, true))
+            throw new ColumnException(tableName, columnName, "column is 'auto-increment'");
 
         processNext(field);
     }
 
     @Override
     protected boolean support(Field field) {
-        return field.isAnnotationPresent(Id.class);
+        return !field.isAnnotationPresent(GeneratedValue.class);
     }
 
 }

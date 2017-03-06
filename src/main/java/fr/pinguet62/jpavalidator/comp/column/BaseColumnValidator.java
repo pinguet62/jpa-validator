@@ -10,6 +10,7 @@ import javax.persistence.Column;
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
 import fr.pinguet62.jpavalidator.comp.ColumnException;
 import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.comp.column.enumeration.BaseEnumerationValidator;
 import fr.pinguet62.jpavalidator.comp.column.nullable.BaseNullableValidator;
 
 public class BaseColumnValidator extends Validator {
@@ -23,7 +24,7 @@ public class BaseColumnValidator extends Validator {
     @Override
     protected List<Validator> getAvailableNextValidators() {
         return asList(new TypeColumnValidator(tableName, column), new BaseNullableValidator(tableName, column),
-                new CharacterColumnValidator(tableName, column));
+                new CharacterColumnValidator(tableName, column), new BaseEnumerationValidator(tableName));
     }
 
     @Override
