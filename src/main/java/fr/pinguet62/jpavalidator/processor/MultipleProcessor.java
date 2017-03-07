@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.validator.Validator;
 
 public class MultipleProcessor extends AbstractProcessor {
 

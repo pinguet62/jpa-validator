@@ -5,7 +5,7 @@ import static java.util.Arrays.asList;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
-import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.validator.Validator;
 
 public class OnlyOneProcessor extends AbstractProcessor {
 

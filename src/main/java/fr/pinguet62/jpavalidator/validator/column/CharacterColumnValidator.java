@@ -1,44 +1,30 @@
 package fr.pinguet62.jpavalidator.validator.column;
 
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.Collection;
 
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 
-import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.validator.AbstractValidator;
+import fr.pinguet62.jpavalidator.database.JdbcMetadataChecker;
+import fr.pinguet62.jpavalidator.exception.ColumnException;
 
-public class CharacterColumnValidator extends AbstractValidator {
+public class CharacterColumnValidator extends AbstractColumnValidator {
 
-    public CharacterColumnValidator(Class<?> entity, String tableName) {
-        super(entity, tableName);
+    public CharacterColumnValidator(String tableName, Column column) {
+        super(tableName, column);
     }
 
     @Override
-    protected boolean doProcess(Field field) {
+    protected void doProcess(Field field) {
         Column column = field.getDeclaredAnnotation(Column.class);
-        if (!JdbcMetadataChecker.INSTANCE.checkCharacter(tableName, column.name(), column.length())) {
-            throwError(format("column has invalid character length: %s.%s", tableName, column.name()));
-            return false;
-        }
-        return true;
-    }
+        String columnName = column.name();
 
-    @Override
-    public Collection<Class<? extends Annotation>> getSupportedAnnotations() {
-        return asList(Column.class, Id.class, GeneratedValue.class, SequenceGenerator.class);
+        if (!JdbcMetadataChecker.INSTANCE.checkCharacter(tableName, columnName, column.length()))
+            throw new ColumnException(tableName, columnName, "invalid character length");
     }
 
     @Override
     public boolean support(Field field) {
-        return field.isAnnotationPresent(Column.class) && field.getType().equals(String.class);
+        return field.getType().equals(String.class);
     }
 
 }

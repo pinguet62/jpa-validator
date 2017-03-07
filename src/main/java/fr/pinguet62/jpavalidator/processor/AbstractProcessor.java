@@ -3,7 +3,7 @@ package fr.pinguet62.jpavalidator.processor;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
-import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.validator.Validator;
 
 /**
  * <b>Store</b> {@link Validator} and <b>define strategy</b> to get the next available to process.

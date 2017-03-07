@@ -1,51 +1,55 @@
 package fr.pinguet62.jpavalidator.validator.onetoone;
 
-import static java.util.Arrays.asList;
-
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.Collection;
 
+import javax.persistence.Entity;
 import javax.persistence.OneToOne;
 
 import fr.pinguet62.jpavalidator.JpaUtils;
-import fr.pinguet62.jpavalidator.validator.AbstractValidator;
+import fr.pinguet62.jpavalidator.exception.FieldException;
+import fr.pinguet62.jpavalidator.exception.MappedbyException;
 
-public class MappedbyOnetooneValidator extends AbstractValidator {
+public class MappedbyOnetooneValidator extends AbstractOnetooneValidator {
 
-    public MappedbyOnetooneValidator(Class<?> entity, String tableName) {
-        super(entity, tableName);
+    protected MappedbyOnetooneValidator(String tableName, OneToOne oneToOne) {
+        super(tableName, oneToOne);
     }
 
     @Override
-    protected boolean doProcess(Field field) {
-        OneToOne oneToOne = field.getDeclaredAnnotation(OneToOne.class);
+    protected void doProcess(Field field) {
+        String mappedBy = oneToOne.mappedBy();
 
-        // Target property: exists
+        // Target class
         Class<?> tgtEntity = field.getType();
-        Field mappedbyField = JpaUtils.getTargetField(tgtEntity, oneToOne.mappedBy());
-        if (mappedbyField == null) {
-            throwError("mappedBy target property not found");
-            return false;
-        }
+        // - @Entity
+        if (!tgtEntity.isAnnotationPresent(Entity.class))
+            throw new FieldException(field,
+                    "target type " + tgtEntity.getSimpleName() + " must be an @" + Entity.class.getSimpleName());
 
-        // Target property: same type
-        if (!mappedbyField.getType().equals(entity)) {
-            throwError("mappedBy target property is not of same type");
-            return false;
-        }
+        // Target property
+        Field mappedbyField = JpaUtils.getTargetField(tgtEntity, mappedBy);
+        // - exists
+        if (mappedbyField == null)
+            throw new MappedbyException(mappedBy, "mappedBy target property not found");
+        // - same type
+        if (!mappedbyField.getType().equals(field.getDeclaringClass()))
+            throw new MappedbyException(mappedBy, "mappedBy target property is not of same type");
 
-        return true;
-    }
-
-    @Override
-    public Collection<Class<? extends Annotation>> getSupportedAnnotations() {
-        return asList(OneToOne.class);
+        // Will be processed by direct validator
+        // - use @OneToOne
+        OneToOne mappedOnetoone = mappedbyField.getDeclaredAnnotation(OneToOne.class);
+        if (mappedOnetoone == null)
+            throw new MappedbyException(mappedBy,
+                    "mappedBy target property is not annotated with @" + OneToOne.class.getSimpleName());
+        // - doesn't use "mappedBy"
+        if (!mappedOnetoone.mappedBy().equals(""))
+            throw new MappedbyException(mappedBy,
+                    "mappedBy target property cannot use @" + OneToOne.class.getSimpleName() + "(mappedBy) either");
     }
 
     @Override
     public boolean support(Field field) {
-        return field.isAnnotationPresent(OneToOne.class) && !field.getDeclaredAnnotation(OneToOne.class).mappedBy().equals("");
+        return !field.getDeclaredAnnotation(OneToOne.class).mappedBy().equals("");
     }
 
 }

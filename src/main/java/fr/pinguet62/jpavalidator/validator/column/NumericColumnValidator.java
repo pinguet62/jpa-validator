@@ -1,59 +1,43 @@
 package fr.pinguet62.jpavalidator.validator.column;
 
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Collection;
 
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 
-import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.validator.AbstractValidator;
+import fr.pinguet62.jpavalidator.database.JdbcMetadataChecker;
+import fr.pinguet62.jpavalidator.exception.ColumnException;
+import fr.pinguet62.jpavalidator.exception.VException;
 
-public class NumericColumnValidator extends AbstractValidator {
+public class NumericColumnValidator extends AbstractColumnValidator {
 
     private static final Collection<Class<?>> NUMERIC_TYPES = asList(Float.class, Float.TYPE, BigDecimal.class);
 
-    public NumericColumnValidator(Class<?> entity, String tableName) {
-        super(entity, tableName);
+    public NumericColumnValidator(String tableName, Column column) {
+        super(tableName, column);
     }
 
     @Override
-    protected boolean doProcess(Field field) {
+    protected void doProcess(Field field) {
         Column column = field.getDeclaredAnnotation(Column.class);
         String columnName = column.name();
 
         // Field type
-        if (!NUMERIC_TYPES.contains(field.getType())) {
-            throwError(format("invalid field type: %s.%s", tableName, columnName));
-            return false;
-        }
+        if (!NUMERIC_TYPES.contains(field.getType()))
+            throw new VException(Column.class.getSimpleName() + "(precision, scale) can only be used with field of type "
+                    + NUMERIC_TYPES.stream().map(Class::getSimpleName).collect(joining(",", "[", "]")));
 
         // Database constraint
-        if (!JdbcMetadataChecker.INSTANCE.checkNumeric(tableName, columnName, column.precision(), column.scale())) {
-            throwError(format("column has invalid numeric precision/scale: %s.%s not null", tableName, columnName));
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public Collection<Class<? extends Annotation>> getSupportedAnnotations() {
-        return asList(Column.class, Id.class, GeneratedValue.class, SequenceGenerator.class);
+        if (!JdbcMetadataChecker.INSTANCE.checkNumeric(tableName, columnName, column.precision(), column.scale()))
+            throw new ColumnException(tableName, columnName, "invalid numeric precision/scale");
     }
 
     @Override
     public boolean support(Field field) {
-        if (!field.isAnnotationPresent(Column.class))
-            return false;
-
         // Field type require precision
         if (NUMERIC_TYPES.contains(field.getType()))
             return true;

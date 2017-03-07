@@ -1,64 +1,51 @@
 package fr.pinguet62.jpavalidator.validator.onetoone;
 
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.Collection;
 
+import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.JoinTable;
 import javax.persistence.OneToOne;
-import javax.persistence.PrimaryKeyJoinColumns;
 
 import fr.pinguet62.jpavalidator.JpaUtils;
-import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.validator.AbstractValidator;
+import fr.pinguet62.jpavalidator.database.JdbcMetadataChecker;
+import fr.pinguet62.jpavalidator.exception.ColumnException;
+import fr.pinguet62.jpavalidator.exception.FieldException;
 
-public class DirectOnetooneValidator extends AbstractValidator {
+public class DirectOnetooneValidator extends AbstractOnetooneValidator {
 
-    public DirectOnetooneValidator(Class<?> entity, String tableName) {
-        super(entity, tableName);
+    protected DirectOnetooneValidator(String tableName, OneToOne oneToOne) {
+        super(tableName, oneToOne);
     }
 
     @Override
-    protected boolean doProcess(Field field) {
+    protected void doProcess(Field field) {
         JoinColumn joinColumn = field.getDeclaredAnnotation(JoinColumn.class);
         String srcColumnName = joinColumn.name();
 
+        // Column: exists
+        if (!JdbcMetadataChecker.INSTANCE.checkColumnExists(tableName, srcColumnName))
+            throw new ColumnException(tableName, srcColumnName, "column doesn't exists");
+        // Nullable: constraint
+        if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, srcColumnName, joinColumn.nullable()))
+            throw new ColumnException(tableName, srcColumnName, "invalid nullable constraint");
+
+        // Target class
         Class<?> tgtEntity = field.getType();
+        // - @Entity
+        if (!tgtEntity.isAnnotationPresent(Entity.class))
+            throw new FieldException(field,
+                    "target type " + tgtEntity.getSimpleName() + " must be an @" + Entity.class.getSimpleName());
+
         String tgtTableName = JpaUtils.getTableName(tgtEntity);
 
-        // Column & Nullable: database constraint
-        if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, srcColumnName, joinColumn.nullable())) {
-            throwError(format("column doesn't exists or has invalid nullable: %s.%s", tableName, srcColumnName));
-            return false;
-        }
-
         // FK
-        if (JdbcMetadataChecker.INSTANCE.checkForeignKey(tableName, srcColumnName, tgtTableName) == false) {
-            throwError(format("no FK from %s.%s to %s", tableName, srcColumnName, tgtTableName));
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public Collection<Class<? extends Annotation>> getNotYetSupportedAnnotations() {
-        return asList(JoinColumns.class, PrimaryKeyJoinColumns.class, JoinTable.class);
-    }
-
-    @Override
-    public Collection<Class<? extends Annotation>> getSupportedAnnotations() {
-        return asList(OneToOne.class, JoinColumn.class);
+        if (JdbcMetadataChecker.INSTANCE.checkForeignKey(tableName, srcColumnName, tgtTableName) == false)
+            throw new ColumnException(tableName, srcColumnName, "no FK to " + tgtTableName);
     }
 
     @Override
     public boolean support(Field field) {
-        return field.isAnnotationPresent(OneToOne.class) && field.getDeclaredAnnotation(OneToOne.class).mappedBy().equals("");
+        return field.getDeclaredAnnotation(OneToOne.class).mappedBy().equals("");
     }
 
 }

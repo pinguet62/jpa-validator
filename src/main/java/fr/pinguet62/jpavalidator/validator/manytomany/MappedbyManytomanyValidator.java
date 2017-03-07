@@ -1,52 +1,47 @@
 package fr.pinguet62.jpavalidator.validator.manytomany;
 
-import static java.util.Arrays.asList;
-
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.Collection;
 
 import javax.persistence.ManyToMany;
 
 import fr.pinguet62.jpavalidator.JpaUtils;
-import fr.pinguet62.jpavalidator.validator.AbstractValidator;
+import fr.pinguet62.jpavalidator.exception.MappedbyException;
 
-public class MappedbyManytomanyValidator extends AbstractValidator {
+public class MappedbyManytomanyValidator extends AbstractManytomanyValidator {
 
-    public MappedbyManytomanyValidator(Class<?> entity, String tableName) {
-        super(entity, tableName);
+    protected MappedbyManytomanyValidator(String tableName, ManyToMany manyToMany) {
+        super(tableName, manyToMany);
     }
 
     @Override
-    protected boolean doProcess(Field field) {
-        ManyToMany manyToMany = field.getDeclaredAnnotation(ManyToMany.class);
+    protected void doProcess(Field field) {
+        String mappedBy = manyToMany.mappedBy();
 
         // Target property: exists
         Class<?> tgtEntity = JpaUtils.getFirstArgumentType(field.getGenericType());
-        Field mappedbyField = JpaUtils.getTargetField(tgtEntity, manyToMany.mappedBy());
-        if (mappedbyField == null) {
-            throwError("mappedBy target property not found");
-            return false;
-        }
+        Field mappedbyField = JpaUtils.getTargetField(tgtEntity, mappedBy);
+        if (mappedbyField == null)
+            throw new MappedbyException(mappedBy, "mappedBy target property not found");
 
         // Target property: same type
-        if (!JpaUtils.getFirstArgumentType(mappedbyField.getGenericType()).equals(entity)) {
-            throwError("mappedBy target property is not of same type");
-            return false;
-        }
+        if (!JpaUtils.getFirstArgumentType(mappedbyField.getGenericType()).equals(field.getDeclaringClass()))
+            throw new MappedbyException(mappedBy, "mappedBy target property is not of same type");
 
-        return true;
-    }
-
-    @Override
-    public Collection<Class<? extends Annotation>> getSupportedAnnotations() {
-        return asList(ManyToMany.class);
+        // Will be processed by direct validator
+        // - use @ManyToMany
+        ManyToMany mappedOnetomany = mappedbyField.getDeclaredAnnotation(ManyToMany.class);
+        if (mappedOnetomany == null)
+            throw new MappedbyException(mappedBy,
+                    "mappedBy target property is not annotated with @" + ManyToMany.class.getSimpleName());
+        // - doesn't use "mappedBy"
+        if (!mappedOnetomany.mappedBy().equals(""))
+            throw new MappedbyException(mappedBy,
+                    "mappedBy target property cannot use @" + ManyToMany.class.getSimpleName() + "(mappedBy) either");
     }
 
     @Override
     public boolean support(Field field) {
-        return field.isAnnotationPresent(ManyToMany.class)
-                && !field.getDeclaredAnnotation(ManyToMany.class).mappedBy().equals("");
+        return !field.getDeclaredAnnotation(ManyToMany.class).mappedBy().equals("");
     }
 
 }
