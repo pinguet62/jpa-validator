@@ -111,7 +111,7 @@ public class OnetooneTest {
         class PersonInvalidMappedbyType {
             @OneToOne
             @JoinColumn(name = "ADDRESS_ID")
-            String address;
+            String address; // bad type
         }
 
         @Entity
@@ -139,16 +139,39 @@ public class OnetooneTest {
     public void test_mappedby_property_unknown() {
         @Entity
         @Table(name = "ADDRESS")
-        class UnknownMappedbyProperty {
-            @OneToOne(mappedBy = "unknown")
+        class AddressUnknownMappedbyProperty {
+            @OneToOne(mappedBy = "unknown") // bad mappedBy
             Person person;
         }
 
         try {
-            runCheck(UnknownMappedbyProperty.class);
+            runCheck(AddressUnknownMappedbyProperty.class);
             fail();
         } catch (ValidationException e) {
-            assertErrorWithColumn(e, UnknownMappedbyProperty.class, "unknown");
+            assertErrorWithColumn(e, AddressUnknownMappedbyProperty.class, "unknown");
+        }
+    }
+
+    @Test
+    @Script({ "create table ADDRESS ( ID_ADDRESS int primary key, );", //
+            "create table PERSON ( \n" + //
+                    "    ID_PERSON int primary key, \n" + //
+                    "    ADDRESS_ID int references ADDRESS (ID_ADDRESS) \n" + //
+                    ");" })
+    public void test_property_type_invalid() {
+        @Entity
+        @Table(name = "ADDRESS")
+        class PersonInvalidType {
+            @OneToOne
+            @JoinColumn(name = "ADDRESS_ID")
+            String address; // bad type
+        }
+
+        try {
+            runCheck(PersonInvalidType.class);
+            fail();
+        } catch (ValidationException e) {
+            assertErrorWithColumn(e, PersonInvalidType.class, "address");
         }
     }
 

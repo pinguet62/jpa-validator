@@ -20,14 +20,10 @@ public class DirectOnetooneValidator extends AbstractOnetooneValidator {
     @Override
     protected void doProcess(Field field) {
         JoinColumn joinColumn = field.getDeclaredAnnotation(JoinColumn.class);
-        String srcColumnName = joinColumn.name();
+        if (joinColumn == null)
+            throw new FieldException(field, "must be annotated with @" + JoinColumn.class.getSimpleName());
 
-        // Column: exists
-        if (!JdbcMetadataChecker.INSTANCE.checkColumnExists(tableName, srcColumnName))
-            throw new ColumnException(tableName, srcColumnName, "column doesn't exists");
-        // Nullable: constraint
-        if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, srcColumnName, joinColumn.nullable()))
-            throw new ColumnException(tableName, srcColumnName, "invalid nullable constraint");
+        String srcColumnName = joinColumn.name();
 
         // Target class
         Class<?> tgtEntity = field.getType();
@@ -35,6 +31,13 @@ public class DirectOnetooneValidator extends AbstractOnetooneValidator {
         if (!tgtEntity.isAnnotationPresent(Entity.class))
             throw new FieldException(field,
                     "target type " + tgtEntity.getSimpleName() + " must be an @" + Entity.class.getSimpleName());
+
+        // Column: exists
+        if (!JdbcMetadataChecker.INSTANCE.checkColumnExists(tableName, srcColumnName))
+            throw new ColumnException(tableName, srcColumnName, "column doesn't exists");
+        // Nullable: constraint
+        if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, srcColumnName, joinColumn.nullable()))
+            throw new ColumnException(tableName, srcColumnName, "invalid nullable constraint");
 
         String tgtTableName = JpaUtils.getTableName(tgtEntity);
 

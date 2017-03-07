@@ -6,13 +6,13 @@ import static org.junit.Assert.assertTrue;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 
+import fr.pinguet62.jpavalidator.Counter;
 import fr.pinguet62.jpavalidator.JpaUtils;
-import fr.pinguet62.jpavalidator.checker.HsqldbMetadataChecker;
-import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.comp.Counter;
-import fr.pinguet62.jpavalidator.comp.FieldValidator;
+import fr.pinguet62.jpavalidator.database.HsqldbMetadataChecker;
+import fr.pinguet62.jpavalidator.database.JdbcMetadataChecker;
 import fr.pinguet62.jpavalidator.exception.VException;
 import fr.pinguet62.jpavalidator.exception.ValidationException;
+import fr.pinguet62.jpavalidator.validator.FieldValidator;
 
 public class TestUtils {
 

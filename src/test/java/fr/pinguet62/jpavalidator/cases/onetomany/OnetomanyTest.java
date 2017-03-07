@@ -40,7 +40,7 @@ public class OnetomanyTest {
     @Test
     @Script({ "create table PERSON ( PK int primary key );", //
             "create table CAR ( FK int references PERSON (PK) );" })
-    public void test() {
+    public void test_mappedby() {
         runCheck(Person.class);
     }
 

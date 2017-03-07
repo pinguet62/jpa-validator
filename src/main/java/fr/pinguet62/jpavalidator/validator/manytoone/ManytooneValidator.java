@@ -35,13 +35,13 @@ public class ManytooneValidator extends Validator {
 
         String tgtTableName = JpaUtils.getTableName(tgtEntity);
 
-        // Column & Nullable: database constraint
-        if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, srcColumnName, joinColumn.nullable()))
-            throw new ColumnException(tableName, srcColumnName, "invalid nullable constraint");
-
         // FK
         if (!JdbcMetadataChecker.INSTANCE.checkForeignKey(tableName, srcColumnName, tgtTableName))
             throw new ColumnException(tableName, srcColumnName, "no FK from to " + tgtTableName);
+
+        // Column & Nullable: database constraint
+        if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, srcColumnName, joinColumn.nullable()))
+            throw new ColumnException(tableName, srcColumnName, "invalid nullable constraint");
     }
 
     @Override

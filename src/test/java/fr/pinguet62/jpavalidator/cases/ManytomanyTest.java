@@ -99,20 +99,29 @@ public class ManytomanyTest {
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
                     ");" })
-    public void test_mappedBy_propertyType_invalid() {
+    public void test_mappedBy_property_type_invalid() {
+        @Entity
+        @Table(name = "EMPLOYEE")
+        class EmployeeInvalidMappedbyType {
+            @ManyToMany
+            @JoinTable(name = "LINK", joinColumns = { @JoinColumn(name = "EMPLOYEE_ID") }, inverseJoinColumns = {
+                    @JoinColumn(name = "PROJECT_ID") })
+            List<String> projects; // bad type
+        }
+
         @Entity
         @Table(name = "PROJECT")
-        class InvalidMappedbyType {
+        class ProjectInvalidMappedbyType {
             @ManyToMany(mappedBy = "projects")
-            List<String> employees;
+            List<EmployeeInvalidMappedbyType> employees;
         }
 
         try {
-            runCheck(InvalidMappedbyType.class);
+            runCheck(ProjectInvalidMappedbyType.class);
             fail();
         } catch (ValidationException e) {
-            assertErrorWithColumn(e, InvalidMappedbyType.class, "mappedBy");
-            assertErrorWithColumn(e, InvalidMappedbyType.class, "projects");
+            assertErrorWithColumn(e, ProjectInvalidMappedbyType.class, "mappedBy");
+            assertErrorWithColumn(e, ProjectInvalidMappedbyType.class, "projects");
         }
     }
 
@@ -123,11 +132,11 @@ public class ManytomanyTest {
                     "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
                     "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
                     ");" })
-    public void test_mappedBy_propertyUnknown() {
+    public void test_mappedBy_property_unknown() {
         @Entity
         @Table(name = "PROJECT")
         class UnknownMappedbyProperty {
-            @ManyToMany(mappedBy = "unknown")
+            @ManyToMany(mappedBy = "unknown") // bad mappedBy
             List<Employee> employees;
         }
 
@@ -136,6 +145,31 @@ public class ManytomanyTest {
             fail();
         } catch (ValidationException e) {
             assertErrorWithColumn(e, UnknownMappedbyProperty.class, "unknown");
+        }
+    }
+
+    @Test
+    @Script({ "create table EMPLOYEE ( ID_EMPLOYEE int primary key );", //
+            "create table PROJECT ( ID_PROJECT int primary key );", //
+            "create table LINK ( \n" + //
+                    "    EMPLOYEE_ID int references EMPLOYEE (ID_EMPLOYEE), \n" + //
+                    "    PROJECT_ID int references PROJECT (ID_PROJECT) \n" + //
+                    ");" })
+    public void test_property_type_invalid() {
+        @Entity
+        @Table(name = "EMPLOYEE")
+        class EmployeeInvalidType {
+            @ManyToMany
+            @JoinTable(name = "LINK", joinColumns = { @JoinColumn(name = "EMPLOYEE_ID") }, inverseJoinColumns = {
+                    @JoinColumn(name = "PROJECT_ID") })
+            List<String> projects; // bad type
+        }
+
+        try {
+            runCheck(EmployeeInvalidType.class);
+            fail();
+        } catch (ValidationException e) {
+            assertErrorWithColumn(e, EmployeeInvalidType.class, "projects");
         }
     }
 
