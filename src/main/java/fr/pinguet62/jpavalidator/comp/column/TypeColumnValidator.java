@@ -38,19 +38,17 @@ public class TypeColumnValidator extends AbstractColumnValidator {
     }
 
     @Override
-    protected void process(Field field) {
+    protected void doProcess(Field field) {
         Column column = field.getDeclaredAnnotation(Column.class);
         column.name();
 
         Class<?> propertyType = field.getType();
         String expectedDatabaseType = javaToDb.get(propertyType);
         System.err.println("TODO: check " + propertyType.getSimpleName() + "/" + expectedDatabaseType);
-
-        // TODO processNext(field);
     }
 
     @Override
-    protected boolean support(Field field) {
+    public boolean support(Field field) {
         return true;
     }
 

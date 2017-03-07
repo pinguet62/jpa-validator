@@ -2,10 +2,12 @@ package fr.pinguet62.jpavalidator.comp.onetoone;
 
 import java.lang.reflect.Field;
 
+import javax.persistence.Entity;
 import javax.persistence.OneToOne;
 
 import fr.pinguet62.jpavalidator.JpaUtils;
-import fr.pinguet62.jpavalidator.comp.MappedbyException;
+import fr.pinguet62.jpavalidator.exception.FieldException;
+import fr.pinguet62.jpavalidator.exception.MappedbyException;
 
 public class MappedbyOnetooneValidator extends AbstractOnetooneValidator {
 
@@ -14,17 +16,22 @@ public class MappedbyOnetooneValidator extends AbstractOnetooneValidator {
     }
 
     @Override
-    protected void process(Field field) {
+    protected void doProcess(Field field) {
         String mappedBy = oneToOne.mappedBy();
 
-        // Target property
+        // Target class
         Class<?> tgtEntity = field.getType();
-        Field mappedbyField = JpaUtils.getTargetField(tgtEntity, mappedBy);
+        // - @Entity
+        if (!tgtEntity.isAnnotationPresent(Entity.class))
+            throw new FieldException(field,
+                    "target type " + tgtEntity.getSimpleName() + " must be an @" + Entity.class.getSimpleName());
 
-        // exists
+        // Target property
+        Field mappedbyField = JpaUtils.getTargetField(tgtEntity, mappedBy);
+        // - exists
         if (mappedbyField == null)
             throw new MappedbyException(mappedBy, "mappedBy target property not found");
-        // same type
+        // - same type
         if (!mappedbyField.getType().equals(field.getDeclaringClass()))
             throw new MappedbyException(mappedBy, "mappedBy target property is not of same type");
 
@@ -38,12 +45,10 @@ public class MappedbyOnetooneValidator extends AbstractOnetooneValidator {
         if (!mappedOnetoone.mappedBy().equals(""))
             throw new MappedbyException(mappedBy,
                     "mappedBy target property cannot use @" + OneToOne.class.getSimpleName() + "(mappedBy) either");
-
-        // TODO processNext(field);
     }
 
     @Override
-    protected boolean support(Field field) {
+    public boolean support(Field field) {
         return !field.getDeclaredAnnotation(OneToOne.class).mappedBy().equals("");
     }
 

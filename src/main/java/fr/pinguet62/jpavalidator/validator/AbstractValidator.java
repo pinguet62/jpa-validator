@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 import javax.persistence.Entity;
 
-import fr.pinguet62.jpavalidator.NotYetImplemented;
+import fr.pinguet62.jpavalidator.exception.NotYetImplementedException;
 
 public abstract class AbstractValidator {
 
@@ -29,7 +29,7 @@ public abstract class AbstractValidator {
     private boolean checkNotYetSupportedAnnotations(Field field) {
         for (Class<? extends Annotation> annotation : getNotYetSupportedAnnotations())
             if (field.isAnnotationPresent(annotation))
-                throw new NotYetImplemented(field.toString() + ": @" + annotation.getSimpleName());
+                throw new NotYetImplementedException(field.toString() + ": @" + annotation.getSimpleName());
         return true;
     }
 

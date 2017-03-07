@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.springframework.core.type.filter.AssignableTypeFilter;
 
+import fr.pinguet62.jpavalidator.exception.ValidationException;
 import fr.pinguet62.jpavalidator.validator.AbstractValidator;
 
 public class Processor implements Consumer<List<Class<?>>> {

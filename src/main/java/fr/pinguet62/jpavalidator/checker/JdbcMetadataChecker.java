@@ -21,8 +21,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import fr.pinguet62.jpavalidator.NotYetImplemented;
 import fr.pinguet62.jpavalidator.SQLRuntimeException;
+import fr.pinguet62.jpavalidator.exception.NotYetImplementedException;
 
 /**
  * Visitor pattern used to check all types of JPA constraints: PK, FK, length, numeric, ...
@@ -190,7 +190,7 @@ public abstract class JdbcMetadataChecker {
     }
 
     public boolean checkType(String tableName, String columnName, String type) {
-        throw new NotYetImplemented();
+        throw new NotYetImplementedException();
     }
 
     private String convertBoolean(boolean value) {

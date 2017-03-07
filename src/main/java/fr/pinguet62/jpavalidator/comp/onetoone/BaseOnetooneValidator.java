@@ -3,11 +3,12 @@ package fr.pinguet62.jpavalidator.comp.onetoone;
 import static java.util.Arrays.asList;
 
 import java.lang.reflect.Field;
-import java.util.List;
 
 import javax.persistence.OneToOne;
 
 import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.processor.AbstractProcessor;
+import fr.pinguet62.jpavalidator.processor.OnlyOneProcessor;
 
 public class BaseOnetooneValidator extends Validator {
 
@@ -18,19 +19,18 @@ public class BaseOnetooneValidator extends Validator {
     }
 
     @Override
-    protected List<Validator> getAvailableNextValidators() {
-        return asList(new DirectOnetooneValidator(tableName, oneToOne), new MappedbyOnetooneValidator(tableName, oneToOne));
-    }
-
-    @Override
-    protected void process(Field field) {
+    protected void doProcess(Field field) {
         oneToOne = field.getDeclaredAnnotation(OneToOne.class);
-
-        processNext(field);
     }
 
     @Override
-    protected boolean support(Field field) {
+    protected AbstractProcessor getProcessor() {
+        return new OnlyOneProcessor(
+                asList(new DirectOnetooneValidator(tableName, oneToOne), new MappedbyOnetooneValidator(tableName, oneToOne)));
+    }
+
+    @Override
+    public boolean support(Field field) {
         return field.isAnnotationPresent(OneToOne.class);
     }
 

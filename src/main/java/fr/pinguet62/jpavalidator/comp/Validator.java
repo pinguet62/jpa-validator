@@ -2,7 +2,9 @@ package fr.pinguet62.jpavalidator.comp;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.List;
+
+import fr.pinguet62.jpavalidator.processor.AbstractProcessor;
+import fr.pinguet62.jpavalidator.processor.MultipleProcessor;
 
 public abstract class Validator {
 
@@ -12,25 +14,44 @@ public abstract class Validator {
         this.tableName = tableName;
     }
 
-    /** The values must be <b>ordered</b> because are evaluated in order. */
-    protected List<Validator> getAvailableNextValidators() {
-        return new ArrayList<>();
+    /**
+     * Implemented by each {@link Validator} to check the JPA rules.
+     * <p>
+     * Empty by default: define a <b>tree-separation</b> (TODO translate) whithout action.
+     */
+    protected void doProcess(Field field) {}
+
+    /**
+     * Define next {@link Validator}s and the strategy to get the {@link Validator}(s) to process.
+     * <p>
+     * Empty by default: define a <b>end-tree</b> {@link Validator} without next to process.
+     */
+    protected AbstractProcessor getProcessor() {
+        return new MultipleProcessor(new ArrayList<>());
     }
 
-    protected abstract void process(Field field);
-
-    public void processNext(Field field) {
-        Validator next = null;
-        for (Validator validator : getAvailableNextValidators())
-            if (validator.support(field))
-                // TODO Strategy
-                // if (next != null) throw new RuntimeException("Only 1 can be called");
-                next = validator;
-        if (next == null)
-            throw new RuntimeException("Not found: " + getClass());
-        next.process(field);
+    /**
+     * Internal method who:
+     * <ol>
+     * <li>get next {@link Validator#support(Field) supported validators} using {@link #getProcessor()}</li>
+     * <li>{@link #doProcess(Field) process validation}</li>
+     * <li>{@link #process(Field) process next sub-validators}</li>
+     * </ol>
+     */
+    public void process(Field field) {
+        for (Validator validator : getProcessor().getValidators(field)) {
+            Counter.logValidator(validator);
+            Counter.N++;
+            validator.doProcess(field);
+            validator.process(field);
+            Counter.N--;
+        }
     }
 
-    protected abstract boolean support(Field field);
+    /**
+     * Method used by <b>responsability chaining</b> pattern to check if the {@link Field} can be
+     * {@link #doProcess(Field) processed} by the {@link Validator}.
+     */
+    public abstract boolean support(Field field);
 
 }

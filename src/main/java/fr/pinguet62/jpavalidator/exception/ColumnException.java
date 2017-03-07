@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator.comp;
+package fr.pinguet62.jpavalidator.exception;
 
 import static java.lang.String.format;
 

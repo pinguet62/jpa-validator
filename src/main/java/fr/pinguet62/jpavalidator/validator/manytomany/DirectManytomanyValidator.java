@@ -14,8 +14,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.PrimaryKeyJoinColumns;
 
 import fr.pinguet62.jpavalidator.JpaUtils;
-import fr.pinguet62.jpavalidator.NotYetImplemented;
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
+import fr.pinguet62.jpavalidator.exception.NotYetImplementedException;
 import fr.pinguet62.jpavalidator.validator.AbstractValidator;
 
 public class DirectManytomanyValidator extends AbstractValidator {
@@ -33,7 +33,7 @@ public class DirectManytomanyValidator extends AbstractValidator {
         {
             // Direct
             if (joinTable.joinColumns().length != 1)
-                throw new NotYetImplemented(field.toString() + ": @" + JoinTable.class + "(joinColumns.length > 1)");
+                throw new NotYetImplementedException(field.toString() + ": @" + JoinTable.class + "(joinColumns.length > 1)");
             JoinColumn joinColumn = joinTable.joinColumns()[0];
 
             if (JdbcMetadataChecker.INSTANCE.checkForeignKey(linkTableName, joinColumn.name(), tableName) == false) {
@@ -44,7 +44,7 @@ public class DirectManytomanyValidator extends AbstractValidator {
         {
             // Reverse
             if (joinTable.inverseJoinColumns().length != 1)
-                throw new NotYetImplemented(field.toString() + ": @" + JoinTable.class + "(inverseJoinColumns.length > 1)");
+                throw new NotYetImplementedException(field.toString() + ": @" + JoinTable.class + "(inverseJoinColumns.length > 1)");
             JoinColumn joinColumn = joinTable.inverseJoinColumns()[0];
             Class<?> targetEntity = JpaUtils.getFirstArgumentType(field.getGenericType());
             String targetTableName = JpaUtils.getTableName(targetEntity);

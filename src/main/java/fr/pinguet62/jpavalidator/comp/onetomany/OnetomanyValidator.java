@@ -1,14 +1,17 @@
 package fr.pinguet62.jpavalidator.comp.onetomany;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 
+import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import fr.pinguet62.jpavalidator.JpaUtils;
-import fr.pinguet62.jpavalidator.comp.MappedbyException;
 import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.exception.FieldException;
+import fr.pinguet62.jpavalidator.exception.MappedbyException;
 
 public class OnetomanyValidator extends Validator {
 
@@ -17,17 +20,26 @@ public class OnetomanyValidator extends Validator {
     }
 
     @Override
-    protected void process(Field field) {
+    protected void doProcess(Field field) {
         OneToMany oneToMany = field.getDeclaredAnnotation(OneToMany.class);
         String mappedBy = oneToMany.mappedBy();
 
-        // Target property: exists
+        // Target class
+        // - Collection<>
+        if (!(Collection.class.isAssignableFrom(field.getType())))
+            throw new FieldException(field, "must be a " + Collection.class.getSimpleName());
         Class<?> tgtEntity = JpaUtils.getFirstArgumentType(field.getGenericType());
+        // - @Entity
+        if (!tgtEntity.isAnnotationPresent(Entity.class))
+            throw new FieldException(field,
+                    "target type " + tgtEntity.getSimpleName() + " must be an @" + Entity.class.getSimpleName());
+
+        // Target property
         Field mappedbyField = JpaUtils.getTargetField(tgtEntity, mappedBy);
+        // - exists
         if (mappedbyField == null)
             throw new MappedbyException(mappedBy, "mappedBy target property not found");
-
-        // Target property: same type
+        // - same type
         if (!mappedbyField.getType().equals(field.getDeclaringClass()))
             throw new MappedbyException(mappedBy, "mappedBy target property is not of same type");
 
@@ -38,12 +50,10 @@ public class OnetomanyValidator extends Validator {
         // - use @JoinColumn
         if (!mappedbyField.isAnnotationPresent(JoinColumn.class))
             throw new MappedbyException(mappedBy, "mappedBy target property must use @" + JoinColumn.class.getSimpleName());
-
-        // TODO processNext(field);
     }
 
     @Override
-    protected boolean support(Field field) {
+    public boolean support(Field field) {
         return field.isAnnotationPresent(OneToMany.class);
     }
 

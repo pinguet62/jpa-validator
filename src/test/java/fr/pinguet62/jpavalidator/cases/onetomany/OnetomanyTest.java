@@ -15,7 +15,7 @@ import javax.persistence.Table;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import fr.pinguet62.jpavalidator.ValidationException;
+import fr.pinguet62.jpavalidator.exception.ValidationException;
 import fr.pinguet62.jpavalidator.util.runner.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.runner.Script;
 
@@ -49,33 +49,6 @@ public class OnetomanyTest {
             "create table CAR ( FK int references PERSON (PK) );" })
     public void test_mappedby_property_type_invalid() {
         @Entity
-        @Table(name = "CAR")
-        class InvalidMappedbyTypeCar {
-            @ManyToOne
-            @JoinColumn(name = "FK")
-            String person;
-        }
-
-        @Entity
-        @Table(name = "PERSON")
-        class InvalidMappedbyTypePerson {
-            @OneToMany(mappedBy = "person")
-            List<InvalidMappedbyTypeCar> cars;
-        }
-
-        try {
-            runCheck(InvalidMappedbyTypePerson.class);
-            fail();
-        } catch (ValidationException e) {
-            assertErrorWithColumn(e, InvalidMappedbyTypePerson.class, "SAMPLE", "cars");
-        }
-    }
-
-    @Test
-    @Script({ "create table PERSON ( PK int primary key );", //
-            "create table CAR ( FK int references PERSON (PK) );" })
-    public void test_mappedby_property_unknown() {
-        @Entity
         @Table(name = "PERSON")
         class UnknownMappedbyProperty {
             @OneToMany(mappedBy = "person")
@@ -86,7 +59,28 @@ public class OnetomanyTest {
             runCheck(UnknownMappedbyProperty.class);
             fail();
         } catch (ValidationException e) {
-            assertErrorWithColumn(e, UnknownMappedbyProperty.class, "SAMPLE", "cars");
+            // assertErrorWithColumn(e, UnknownMappedbyProperty.class, "cars");
+            assertErrorWithColumn(e, UnknownMappedbyProperty.class, "person");
+        }
+    }
+
+    @Test
+    @Script({ "create table PERSON ( PK int primary key );", //
+            "create table CAR ( FK int references PERSON (PK) );" })
+    public void test_mappedby_property_unknown() {
+        @Entity
+        @Table(name = "PERSON")
+        class UnknownMappedbyProperty {
+            @OneToMany(mappedBy = "unknown")
+            List<Car> cars;
+        }
+
+        try {
+            runCheck(UnknownMappedbyProperty.class);
+            fail();
+        } catch (ValidationException e) {
+            // assertErrorWithColumn(e, UnknownMappedbyProperty.class, "cars");
+            assertErrorWithColumn(e, UnknownMappedbyProperty.class, "unknown");
         }
     }
 
@@ -105,7 +99,7 @@ public class OnetomanyTest {
             runCheck(InvalidType.class);
             fail();
         } catch (ValidationException e) {
-            assertErrorWithColumn(e, InvalidType.class, "SAMPLE", "cars");
+            assertErrorWithColumn(e, InvalidType.class, "cars");
         }
     }
 

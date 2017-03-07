@@ -6,8 +6,8 @@ import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.comp.ColumnException;
 import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.exception.ColumnException;
 
 public class DefaultIdValidator extends Validator {
 
@@ -16,7 +16,7 @@ public class DefaultIdValidator extends Validator {
     }
 
     @Override
-    protected void process(Field field) {
+    protected void doProcess(Field field) {
         Column column = field.getDeclaredAnnotation(Column.class);
         String columnName = column.name();
 
@@ -27,12 +27,10 @@ public class DefaultIdValidator extends Validator {
         // Not auto-increment
         if (JdbcMetadataChecker.INSTANCE.checkAutoIncrement(tableName, columnName, true))
             throw new ColumnException(tableName, columnName, "column is 'auto-increment'");
-
-        // TODO processNext(field);
     }
 
     @Override
-    protected boolean support(Field field) {
+    public boolean support(Field field) {
         return !field.isAnnotationPresent(GeneratedValue.class);
     }
 

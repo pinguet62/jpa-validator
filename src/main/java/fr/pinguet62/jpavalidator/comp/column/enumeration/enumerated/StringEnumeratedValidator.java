@@ -9,8 +9,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.comp.ColumnException;
 import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.exception.ColumnException;
 
 public class StringEnumeratedValidator extends Validator {
 
@@ -21,7 +21,7 @@ public class StringEnumeratedValidator extends Validator {
     }
 
     @Override
-    protected void process(Field field) {
+    protected void doProcess(Field field) {
         Column column = field.getDeclaredAnnotation(Column.class);
         String columnName = column.name();
 
@@ -29,12 +29,10 @@ public class StringEnumeratedValidator extends Validator {
         if (!JdbcMetadataChecker.INSTANCE.checkType(tableName, columnName, dbType))
             throw new ColumnException(tableName, columnName,
                     "@" + Enumerated.class.getSimpleName() + "(" + enumType.name() + ") require " + dbType + " database type");
-
-        // TODO processNext(field);
     }
 
     @Override
-    protected boolean support(Field field) {
+    public boolean support(Field field) {
         return field.getDeclaredAnnotation(Enumerated.class).value().equals(enumType);
     }
 

@@ -15,7 +15,7 @@ import javax.persistence.Table;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import fr.pinguet62.jpavalidator.ValidationException;
+import fr.pinguet62.jpavalidator.exception.ValidationException;
 import fr.pinguet62.jpavalidator.util.runner.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.runner.Script;
 

@@ -2,13 +2,15 @@ package fr.pinguet62.jpavalidator.comp.manytoone;
 
 import java.lang.reflect.Field;
 
+import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import fr.pinguet62.jpavalidator.JpaUtils;
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.comp.ColumnException;
 import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.exception.ColumnException;
+import fr.pinguet62.jpavalidator.exception.FieldException;
 
 public class ManytooneValidator extends Validator {
 
@@ -17,11 +19,20 @@ public class ManytooneValidator extends Validator {
     }
 
     @Override
-    protected void process(Field field) {
+    protected void doProcess(Field field) {
         JoinColumn joinColumn = field.getDeclaredAnnotation(JoinColumn.class);
+        if (joinColumn == null)
+            throw new FieldException(field, "must be annotated with @" + JoinColumn.class.getSimpleName());
+
         String srcColumnName = joinColumn.name();
 
+        // Target class
         Class<?> tgtEntity = field.getType();
+        // - @Entity
+        if (!tgtEntity.isAnnotationPresent(Entity.class))
+            throw new FieldException(field,
+                    "target type " + tgtEntity.getSimpleName() + " must be an @" + Entity.class.getSimpleName());
+
         String tgtTableName = JpaUtils.getTableName(tgtEntity);
 
         // Column & Nullable: database constraint
@@ -31,12 +42,10 @@ public class ManytooneValidator extends Validator {
         // FK
         if (!JdbcMetadataChecker.INSTANCE.checkForeignKey(tableName, srcColumnName, tgtTableName))
             throw new ColumnException(tableName, srcColumnName, "no FK from to " + tgtTableName);
-
-        // TODO processNext(field);
     }
 
     @Override
-    protected boolean support(Field field) {
+    public boolean support(Field field) {
         return field.isAnnotationPresent(ManyToOne.class);
     }
 

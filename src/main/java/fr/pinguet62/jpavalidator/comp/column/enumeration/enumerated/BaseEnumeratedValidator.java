@@ -3,9 +3,10 @@ package fr.pinguet62.jpavalidator.comp.column.enumeration.enumerated;
 import static java.util.Arrays.asList;
 
 import java.lang.reflect.Field;
-import java.util.List;
 
 import fr.pinguet62.jpavalidator.comp.Validator;
+import fr.pinguet62.jpavalidator.processor.AbstractProcessor;
+import fr.pinguet62.jpavalidator.processor.OnlyOneProcessor;
 
 public class BaseEnumeratedValidator extends Validator {
 
@@ -14,17 +15,13 @@ public class BaseEnumeratedValidator extends Validator {
     }
 
     @Override
-    protected List<Validator> getAvailableNextValidators() {
-        return asList(new OrdinalEnumeratedValidator(tableName), new StringEnumeratedValidator(tableName));
+    protected AbstractProcessor getProcessor() {
+        return new OnlyOneProcessor(
+                asList(new OrdinalEnumeratedValidator(tableName), new StringEnumeratedValidator(tableName)));
     }
 
     @Override
-    protected void process(Field field) {
-        processNext(field);
-    }
-
-    @Override
-    protected boolean support(Field field) {
+    public boolean support(Field field) {
         return Enum.class.isAssignableFrom(field.getType());
     }
 

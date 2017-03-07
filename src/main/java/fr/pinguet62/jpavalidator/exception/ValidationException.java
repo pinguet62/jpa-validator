@@ -1,4 +1,4 @@
-package fr.pinguet62.jpavalidator;
+package fr.pinguet62.jpavalidator.exception;
 
 import static java.lang.System.lineSeparator;
 import static java.util.stream.Collectors.joining;

@@ -12,7 +12,7 @@ import javax.persistence.Table;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import fr.pinguet62.jpavalidator.ValidationException;
+import fr.pinguet62.jpavalidator.exception.ValidationException;
 import fr.pinguet62.jpavalidator.util.runner.SchemaRunner;
 import fr.pinguet62.jpavalidator.util.runner.Script;
 
@@ -105,20 +105,28 @@ public class OnetooneTest {
                     "    ID_PERSON int primary key, \n" + //
                     "    ADDRESS_ID int references ADDRESS (ID_ADDRESS) \n" + //
                     ");" })
-    public void test_mappedby_propertyType_invalid() {
+    public void test_mappedby_property_type_invalid() {
+        @Entity
+        @Table(name = "PERSON")
+        class PersonInvalidMappedbyType {
+            @OneToOne
+            @JoinColumn(name = "ADDRESS_ID")
+            String address;
+        }
+
         @Entity
         @Table(name = "ADDRESS")
-        class InvalidMappedbyType {
+        class AddressInvalidMappedbyType {
             @OneToOne(mappedBy = "address")
-            String person;
+            PersonInvalidMappedbyType person;
         }
 
         try {
-            runCheck(InvalidMappedbyType.class);
+            runCheck(AddressInvalidMappedbyType.class);
             fail();
         } catch (ValidationException e) {
-            assertErrorWithColumn(e, InvalidMappedbyType.class, "mappedBy");
-            assertErrorWithColumn(e, InvalidMappedbyType.class, "address");
+            assertErrorWithColumn(e, AddressInvalidMappedbyType.class, "mappedBy");
+            assertErrorWithColumn(e, AddressInvalidMappedbyType.class, "address");
         }
     }
 
@@ -128,12 +136,12 @@ public class OnetooneTest {
                     "    ID_PERSON int primary key, \n" + //
                     "    ADDRESS_ID int references ADDRESS (ID_ADDRESS) \n" + //
                     ");" })
-    public void test_mappedby_propertyUnknown() {
+    public void test_mappedby_property_unknown() {
         @Entity
         @Table(name = "ADDRESS")
         class UnknownMappedbyProperty {
             @OneToOne(mappedBy = "unknown")
-            String person;
+            Person person;
         }
 
         try {

@@ -7,11 +7,12 @@ import java.lang.reflect.Field;
 import java.sql.SQLException;
 
 import fr.pinguet62.jpavalidator.JpaUtils;
-import fr.pinguet62.jpavalidator.ValidationException;
 import fr.pinguet62.jpavalidator.checker.HsqldbMetadataChecker;
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
+import fr.pinguet62.jpavalidator.comp.Counter;
 import fr.pinguet62.jpavalidator.comp.FieldValidator;
-import fr.pinguet62.jpavalidator.comp.VException;
+import fr.pinguet62.jpavalidator.exception.VException;
+import fr.pinguet62.jpavalidator.exception.ValidationException;
 
 public class TestUtils {
 
@@ -45,6 +46,8 @@ public class TestUtils {
     }
 
     public static void runCheck(Class<?>... entities) throws ValidationException {
+        Counter.N = 0;
+
         try {
             JdbcMetadataChecker.INSTANCE = new HsqldbMetadataChecker(DATABASE);
         } catch (SQLException e) {
@@ -55,7 +58,7 @@ public class TestUtils {
             for (Field field : JpaUtils.getAnnotatedFields(entity)) {
                 String tableName = JpaUtils.getTableName(entity);
                 try {
-                    new FieldValidator(tableName).processNext(field);
+                    new FieldValidator(tableName).process(field);
                 } catch (VException e) {
                     ValidationException validationException = new ValidationException();
                     validationException.getErrors().add(e.toString());

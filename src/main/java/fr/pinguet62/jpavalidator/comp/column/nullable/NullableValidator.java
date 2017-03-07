@@ -6,8 +6,9 @@ import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.comp.ColumnException;
 import fr.pinguet62.jpavalidator.comp.column.AbstractColumnValidator;
+import fr.pinguet62.jpavalidator.exception.ColumnException;
+import fr.pinguet62.jpavalidator.exception.VException;
 
 public class NullableValidator extends AbstractColumnValidator {
 
@@ -16,19 +17,23 @@ public class NullableValidator extends AbstractColumnValidator {
     }
 
     @Override
-    protected void process(Field field) {
+    protected void doProcess(Field field) {
         Column column = field.getDeclaredAnnotation(Column.class);
         String columnName = column.name();
 
         boolean nullable = column.nullable();
+
+        // Database constraint
         if (!JdbcMetadataChecker.INSTANCE.checkColumn(tableName, columnName, nullable))
             throw new ColumnException(tableName, columnName, "invalid nullable constraint");
 
-        // TODO processNext(field);
+        // Field type
+        if (nullable && field.getType().isPrimitive())
+            throw new VException("field " + field + " must be an " + Object.class.getSimpleName());
     }
 
     @Override
-    protected boolean support(Field field) {
+    public boolean support(Field field) {
         return !field.isAnnotationPresent(GeneratedValue.class);
     }
 

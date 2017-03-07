@@ -1,6 +1,6 @@
 package fr.pinguet62.jpavalidator.util;
 
-import fr.pinguet62.jpavalidator.ValidationException;
+import fr.pinguet62.jpavalidator.exception.ValidationException;
 
 public class ValidationExceptionAssertions {
 

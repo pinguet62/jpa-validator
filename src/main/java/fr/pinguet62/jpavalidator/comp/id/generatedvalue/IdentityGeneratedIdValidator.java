@@ -8,7 +8,7 @@ import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 
 import fr.pinguet62.jpavalidator.checker.JdbcMetadataChecker;
-import fr.pinguet62.jpavalidator.comp.ColumnException;
+import fr.pinguet62.jpavalidator.exception.ColumnException;
 
 public class IdentityGeneratedIdValidator extends AbstractGeneratedvalueValidator {
 
@@ -17,7 +17,7 @@ public class IdentityGeneratedIdValidator extends AbstractGeneratedvalueValidato
     }
 
     @Override
-    protected void process(Field field) {
+    protected void doProcess(Field field) {
         Column column = field.getDeclaredAnnotation(Column.class);
         String columnName = column.name();
 
@@ -30,12 +30,10 @@ public class IdentityGeneratedIdValidator extends AbstractGeneratedvalueValidato
             throw new ColumnException(tableName, columnName, "is not 'generated as identity'");
         if (JdbcMetadataChecker.INSTANCE.checkIsAutoIncrementByAnySequence(tableName, columnName))
             throw new ColumnException(tableName, columnName, "is 'generated as sequence'");
-
-        // TODO processNext(field);
     }
 
     @Override
-    protected boolean support(Field field) {
+    public boolean support(Field field) {
         return field.getDeclaredAnnotation(GeneratedValue.class).strategy().equals(IDENTITY);
     }
 
